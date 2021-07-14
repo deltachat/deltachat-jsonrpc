@@ -1,0 +1,12 @@
+[package]
+name = "dc_cmd_derive"
+version = "0.1.0"
+authors = ["Delta Chat Developers (ML) <delta@codespeak.net>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0.9"
+syn = "1.0.73"
