@@ -188,7 +188,7 @@ impl CommandApi {
         ts.push_str(&gen_ts_body(
             "select_account",
             &format!("{}:{}", "id", u32::get_typescript_type()),
-            "",
+            "void",
             "{id}",
         ));
 
