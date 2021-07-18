@@ -152,43 +152,44 @@ impl CommandApi {
 
         // functions
 
-        ts.push_str(&format!(
-            "\tpublic async function {method_name}({args}):Promise<{return_type}>{{\n\
-                \t\treturn await this.json_transport(\"{method_name}\", {params});\n\
-                \t}}\n",
-            method_name = "add_account",
-            args = "",
-            return_type = u32::get_typescript_type(),
-            params = "undefined"
-        ));
-        ts.push_str(&format!(
-            "\tpublic async function {method_name}({args}):Promise<{return_type}>{{\n\
-                \t\treturn await this.json_transport(\"{method_name}\", {params});\n\
-                \t}}\n",
-            method_name = "get_all_account_ids",
-            args = "",
-            return_type = Vec::<u32>::get_typescript_type(),
-            params = "undefined"
-        ));
-        ts.push_str(&format!(
-            "\tpublic async function {method_name}({args}):Promise<{return_type}>{{\n\
-                \t\treturn await this.json_transport(\"{method_name}\", {params});\n\
-                \t}}\n",
-            method_name = "get_all_accounts",
-            args = "",
-            return_type = Vec::<Account>::get_typescript_type(),
-            params = "undefined"
+        fn gen_ts_body(method_name: &str, args: &str, return_type: &str, params: &str) -> String {
+            format!(
+                "\tpublic async function {method_name}({args}):Promise<{return_type}>{{\n\
+                    \t\treturn await this.json_transport(\"{method_name}\", {params});\n\
+                    \t}}\n",
+                method_name = method_name,
+                args = args,
+                return_type = return_type,
+                params = params
+            )
+        }
+
+        ts.push_str(&gen_ts_body(
+            "add_account",
+            "",
+            &u32::get_typescript_type(),
+            "undefined",
         ));
 
-        let args = format!("{}:{}", "id", u32::get_typescript_type());
-        ts.push_str(&format!(
-            "\tpublic async function {method_name}({args}):Promise<{return_type}>{{\n\
-             \t\treturn await this.json_transport(\"{method_name}\", {params});\n\
-             \t}}\n",
-            method_name = "select_account",
-            args = args,
-            return_type = "",
-            params = "{id}"
+        ts.push_str(&gen_ts_body(
+            "get_all_account_ids",
+            "",
+            &Vec::<u32>::get_typescript_type(),
+            "undefined",
+        ));
+
+        ts.push_str(&gen_ts_body(
+            "get_all_accounts",
+            "",
+            &Vec::<Account>::get_typescript_type(),
+            "undefined",
+        ));
+
+        ts.push_str(&gen_ts_body(
+            "select_account",
+            &format!("{}:{}", "id", u32::get_typescript_type()),
+            "",
+            "{id}",
         ));
 
         ts.push_str("}");
