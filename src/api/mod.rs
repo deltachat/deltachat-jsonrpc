@@ -195,7 +195,7 @@ async fn _get_chat_list_items_by_id(
 
     if chat_id.is_deaddrop() {
         let last_message_id =
-            last_msgid.ok_or_else(||anyhow!("couldn't fetch last chat message on deadrop"))?;
+            last_msgid.ok_or_else(|| anyhow!("couldn't fetch last chat message on deadrop"))?;
         let last_message = deltachat::message::Message::load_from_db(&ctx, last_message_id).await?;
 
         let contact =
@@ -273,9 +273,9 @@ impl CommandApi {
     }
 
     async fn selected_context(&self) -> Result<deltachat::context::Context> {
-        let sc = self.manager.get_selected_account().await.ok_or_else(||anyhow!(
-            "no account/context selected, select one with select_account"
-        ))?;
+        let sc = self.manager.get_selected_account().await.ok_or_else(|| {
+            anyhow!("no account/context selected, select one with select_account")
+        })?;
         Ok(sc)
     }
 }

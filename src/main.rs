@@ -50,7 +50,5 @@ async fn real_main() -> anyhow::Result<()> {
 
     // assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
 
-    println!("TS:\n{}", CommandApi::get_typescript());
-
     Ok(())
 }
