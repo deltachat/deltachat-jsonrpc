@@ -159,16 +159,16 @@ fn statify(t: syn::Type) -> syn::Type {
                         })
                         .collect();
 
-                    return new_t;
+                    new_t
                 } else {
-                    return new_t;
+                    new_t
                 }
             } else {
                 unimplemented!("no last segment");
-            };
+            }
         }
-        _ => return t,
-    };
+        _ => t,
+    }
 }
 
 fn get_contained_arg_type(rtype: &syn::Type) -> syn::Type {
@@ -179,7 +179,7 @@ fn get_contained_arg_type(rtype: &syn::Type) -> syn::Type {
         }) = path.path.segments.last().unwrap().arguments.clone()
         {
             if let Some(syn::GenericArgument::Type(rtype)) = args.first() {
-                return rtype.clone();
+                rtype.clone()
             } else {
                 unimplemented!()
             }
@@ -188,7 +188,7 @@ fn get_contained_arg_type(rtype: &syn::Type) -> syn::Type {
         }
     } else {
         unimplemented!()
-    };
+    }
 }
 
 fn get_2contained_args_type(rtype: &syn::Type) -> (syn::Type, syn::Type) {
@@ -201,7 +201,7 @@ fn get_2contained_args_type(rtype: &syn::Type) -> (syn::Type, syn::Type) {
             let mut arg_iter = args.iter();
             if let Some(syn::GenericArgument::Type(rtype1)) = arg_iter.next() {
                 if let Some(syn::GenericArgument::Type(rtype2)) = arg_iter.next() {
-                    return (rtype1.clone(), rtype2.clone());
+                    (rtype1.clone(), rtype2.clone())
                 } else {
                     unimplemented!()
                 }
@@ -213,7 +213,7 @@ fn get_2contained_args_type(rtype: &syn::Type) -> (syn::Type, syn::Type) {
         }
     } else {
         unimplemented!()
-    };
+    }
 }
 
 fn custom_type_def(
@@ -242,7 +242,7 @@ fn custom_type_def(
         .is_none()
     {
         custom_return_types.push((
-            type_as_string.clone(),
+            type_as_string,
             quote! {
                 if  #rt::makes_use_of_custom_ts_type() && !#rt::IS_WRAPPER {
                     ts.push_str(&format!(

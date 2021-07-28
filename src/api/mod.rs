@@ -195,7 +195,7 @@ async fn _get_chat_list_items_by_id(
 
     if chat_id.is_deaddrop() {
         let last_message_id =
-            last_msgid.ok_or(anyhow!("couldn't fetch last chat message on deadrop"))?;
+            last_msgid.ok_or_else(||anyhow!("couldn't fetch last chat message on deadrop"))?;
         let last_message = deltachat::message::Message::load_from_db(&ctx, last_message_id).await?;
 
         let contact =
@@ -273,7 +273,7 @@ impl CommandApi {
     }
 
     async fn selected_context(&self) -> Result<deltachat::context::Context> {
-        let sc = self.manager.get_selected_account().await.ok_or(anyhow!(
+        let sc = self.manager.get_selected_account().await.ok_or_else(||anyhow!(
             "no account/context selected, select one with select_account"
         ))?;
         Ok(sc)
@@ -307,17 +307,20 @@ impl CommandApi {
             let context_option = self.manager.get_account(id).await;
             if let Some(ctx) = context_option {
                 if ctx.is_configured().await? {
+                    let display_name = ctx.get_config(Config::Displayname).await?;
+                    let addr = ctx.get_config(Config::Addr).await?;
+                    let profile_image = ctx.get_config(Config::Selfavatar).await?;
+                    let color = color_int_to_hex_string(
+                        Contact::get_by_id(&ctx, DC_CONTACT_ID_SELF)
+                            .await?
+                            .get_color(),
+                    );
                     accounts.push(Account::Configured {
                         id,
-                        display_name: ctx.get_config(Config::Displayname).await?,
-                        addr: ctx.get_config(Config::Addr).await?,
-                        profile_image: ctx.get_config(Config::Selfavatar).await?,
-                        // dc.getContact(C.DC_CONTACT_ID_SELF).color
-                        color: color_int_to_hex_string(
-                            Contact::get_by_id(&ctx, DC_CONTACT_ID_SELF)
-                                .await?
-                                .get_color(),
-                        ),
+                        display_name,
+                        addr,
+                        profile_image,
+                        color,
                     });
                 } else {
                     accounts.push(Account::Unconfigured { id });
@@ -368,7 +371,7 @@ impl CommandApi {
         let list = Chatlist::try_load(
             &sc,
             list_flags as usize,
-            query_string.as_ref().map(|s| &**s),
+            query_string.as_deref(),
             query_contact_id,
         )
         .await?;
