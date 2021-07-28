@@ -898,6 +898,7 @@ dependencies = [
  "dc_cmd_derive",
  "deltachat",
  "jsonrpc-core",
+ "num-traits",
  "serde",
  "tempfile",
 ]
@@ -906,6 +907,7 @@ dependencies = [
 name = "dc_cmd_derive"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "proc-macro2",
  "quote",
  "syn",

@@ -1,15 +1,31 @@
+use std::convert::TryInto;
+use std::{collections::HashMap, str::FromStr};
+
 use dc_cmd_derive::gen_command_api;
-use deltachat::accounts::Accounts;
 use deltachat::config::Config;
 use deltachat::constants::*;
+use deltachat::contact::may_be_valid_addr;
 use deltachat::contact::Contact;
+use deltachat::{
+    accounts::Accounts,
+    chat::{Chat, ChatId},
+    message::MsgId,
+};
+use deltachat::{
+    chat::{get_chat_contacts, ChatVisibility},
+    chatlist::Chatlist,
+};
 
-use anyhow::Result;
+use num_traits::cast::ToPrimitive;
+
+use anyhow::{anyhow, Result};
 use jsonrpc_core::serde_json::{json, Value};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub(crate) mod return_type;
 use return_type::*;
+
+use crate::custom_return_type;
 
 enum Account {
     Configured {
@@ -48,16 +64,200 @@ impl ReturnType for Account {
             }),
         }
     }
+
+    custom_return_type!("Account_Type".to_owned());
+}
+
+#[derive(Deserialize)]
+struct ChatListEntry(u32, u32);
+impl ReturnType for ChatListEntry {
+    fn get_typescript_type() -> String {
+        "[number, number]".to_owned()
+    }
+
+    fn into_json_value(self) -> Value {
+        Value::Array(vec![self.0.into_json_value(), self.1.into_json_value()])
+    }
+
+    custom_return_type!("ChatListEntry_Type".to_owned());
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type")]
+enum ChatListItemFetchResult {
+    #[serde(rename_all = "camelCase")]
+    ChatListItem {
+        id: u32,
+        name: String,
+        avatar_path: Option<String>,
+        color: String,
+        last_updated: Option<i64>,
+        summary_text1: String,
+        summary_text2: String,
+        summary_status: u32,
+        is_protected: bool,
+        is_group: bool,
+        fresh_message_counter: usize,
+        is_self_talk: bool,
+        is_device_talk: bool,
+        is_sending_location: bool,
+        is_self_in_group: bool,
+        is_archived: bool,
+        is_pinned: bool,
+        is_muted: bool,
+    },
+    #[serde(rename_all = "camelCase")]
+    DeadDrop {
+        last_updated: i64,
+        sender_name: String,
+        sender_address: String,
+        sender_contact_id: u32,
+        message_id: u32,
+        summary_text1: String,
+        summary_text2: String,
+    },
+    ArchiveLink,
+    #[serde(rename_all = "camelCase")]
+    Error {
+        id: u32,
+        error: String,
+    },
+}
+
+impl ReturnType for ChatListItemFetchResult {
+    fn get_typescript_type() -> String {
+        "\n | { \
+            type: \"DeadDrop\"; \
+            lastUpdated: number; \
+            messageId: number; \
+            senderAddress: string; \
+            senderContactId: number; \
+            senderName: string; \
+            summaryText1: string; \
+            summaryText2: string; \
+          } \
+        | { \
+            type: \"ChatListItem\"; \
+            id: number; \
+            name: string; \
+            avatarPath: null | string; \
+            color: string; \
+            lastUpdated: number; \
+            freshMessageCounter: number; \
+            summaryStatus: number; \
+            summaryText1: string; \
+            summaryText2: string; \
+            isArchived: boolean; \
+            isDeviceTalk: boolean; \
+            isGroup: boolean; \
+            isMuted: boolean; \
+            isPinned: boolean; \
+            isSelfInGroup: boolean; \
+            isSelfTalk: boolean; \
+            isSendingLocation: boolean; \
+            isProtected: boolean; \
+          } \
+        | { type: \"ArchiveLink\" } \
+        | { \
+            type: \"Error\"; \
+            id: number; \
+            error: string; \
+          }"
+        .to_owned()
+    }
+
+    fn into_json_value(self) -> Value {
+        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
+    }
+
+    custom_return_type!("ChatListItemFetchResult_Type".to_owned());
+}
+
+async fn _get_chat_list_items_by_id(
+    ctx: &deltachat::context::Context,
+    entry: &ChatListEntry,
+) -> Result<ChatListItemFetchResult> {
+    let chat_id = ChatId::new(entry.0);
+    let last_msgid = match entry.1 {
+        0 => None,
+        _ => Some(MsgId::new(entry.1)),
+    };
+
+    if chat_id.is_archived_link() {
+        return Ok(ChatListItemFetchResult::ArchiveLink);
+    }
+
+    let chat = Chat::load_from_db(&ctx, chat_id).await?;
+    let summary = Chatlist::get_summary2(&ctx, chat_id, last_msgid, Some(&chat)).await?;
+
+    let summary_text1 = summary.get_text1().unwrap_or("").to_owned();
+    let summary_text2 = summary.get_text2().unwrap_or("").to_owned();
+
+    if chat_id.is_deaddrop() {
+        let last_message_id =
+            last_msgid.ok_or(anyhow!("couldn't fetch last chat message on deadrop"))?;
+        let last_message = deltachat::message::Message::load_from_db(&ctx, last_message_id).await?;
+
+        let contact =
+            deltachat::contact::Contact::load_from_db(&ctx, last_message.get_from_id()).await?;
+
+        return Ok(ChatListItemFetchResult::DeadDrop {
+            last_updated: last_message.get_timestamp() * 1000,
+            sender_name: contact.get_display_name().to_owned(),
+            sender_address: contact.get_addr().to_owned(),
+            sender_contact_id: contact.get_id(),
+            message_id: last_message_id.to_u32(),
+            summary_text1,
+            summary_text2,
+        });
+    }
+
+    let visibility = chat.get_visibility();
+
+    let avatar_path = match chat.get_profile_image(ctx).await? {
+        Some(path) => Some(path.to_str().unwrap_or("invalid/path").to_owned()),
+        None => None,
+    };
+
+    let last_updated = match last_msgid {
+        Some(id) => {
+            let last_message = deltachat::message::Message::load_from_db(&ctx, id).await?;
+            Some(last_message.get_timestamp() * 1000)
+        }
+        None => None,
+    };
+
+    let self_in_group = get_chat_contacts(&ctx, chat_id)
+        .await?
+        .contains(&DC_CONTACT_ID_SELF);
+
+    let fresh_message_counter = chat_id.get_fresh_msg_cnt(&ctx).await?;
+    let color = color_int_to_hex_string(chat.get_color(&ctx).await?);
+
+    Ok(ChatListItemFetchResult::ChatListItem {
+        id: chat_id.to_u32(),
+        name: chat.get_name().to_owned(),
+        avatar_path,
+        color,
+        last_updated,
+        summary_text1,
+        summary_text2,
+        summary_status: summary.get_state().to_u32().expect("impossible"), // idea and a function to transform the constant to strings? or return string enum
+        is_protected: chat.is_protected(),
+        is_group: chat.get_type() == Chattype::Group,
+        fresh_message_counter,
+        is_self_talk: chat.is_self_talk(),
+        is_device_talk: chat.is_device_talk(),
+        is_self_in_group: self_in_group,
+        is_sending_location: chat.is_sending_locations(),
+        is_archived: visibility == ChatVisibility::Archived,
+        is_pinned: visibility == ChatVisibility::Pinned,
+        is_muted: chat.is_muted(),
+    })
 }
 
 fn color_int_to_hex_string(color: u32) -> String {
-    todo!()
-    // /**
-    // * @param integerColor expects a 24bit rgb integer (left to right: 8bits red, 8bits green, 8bits blue)
-    // */
-    // export function integerToHexColor(integerColor: number) {
-    //  return '#' + (integerColor + 16777216).toString(16).substring(1)
-    // }
+    format!("{:#08x}", color).replace("0x", "#")
 }
 
 #[derive(Clone, Debug)]
@@ -71,10 +271,24 @@ impl CommandApi {
             manager: am.clone(),
         }
     }
+
+    async fn selected_context(&self) -> Result<deltachat::context::Context> {
+        let sc = self.manager.get_selected_account().await.ok_or(anyhow!(
+            "no account/context selected, select one with select_account"
+        ))?;
+        Ok(sc)
+    }
 }
 
 #[gen_command_api]
 impl CommandApi {
+    // ---------------------------------------------
+    //       Misc context independent methods
+    // ---------------------------------------------
+    async fn check_email_validity(&self, email: String) -> bool {
+        return may_be_valid_addr(&email);
+    }
+
     // ---------------------------------------------
     //              Account Management
     // ---------------------------------------------
@@ -124,6 +338,71 @@ impl CommandApi {
     // ---------------------------------------------
 
     // TODO add a function where an parameter is a custom struct / object
+
+    // TODO fn sc_send_message () -> {}
+
+    async fn sc_get_config(&self, key: String) -> Result<Option<String>> {
+        let sc = self.selected_context().await?;
+        Ok(sc.get_config(Config::from_str(&key)?).await?)
+    }
+
+    async fn sc_batch_get_config(
+        &self,
+        keys: Vec<String>,
+    ) -> Result<HashMap<String, Option<String>>> {
+        let sc = self.selected_context().await?;
+        let mut result: HashMap<String, Option<String>> = HashMap::new();
+        for key in keys {
+            result.insert(key.clone(), sc.get_config(Config::from_str(&key)?).await?);
+        }
+        Ok(result)
+    }
+
+    async fn sc_get_chatlist_entries(
+        &self,
+        list_flags: u32,
+        query_string: Option<String>,
+        query_contact_id: Option<u32>,
+    ) -> Result<Vec<ChatListEntry>> {
+        let sc = self.selected_context().await?;
+        let list = Chatlist::try_load(
+            &sc,
+            list_flags as usize,
+            query_string.as_ref().map(|s| &**s),
+            query_contact_id,
+        )
+        .await?;
+        let mut l: Vec<ChatListEntry> = Vec::new();
+        for i in 0..list.len() {
+            l.push(ChatListEntry(
+                list.get_chat_id(i).to_u32(),
+                list.get_msg_id(i)?.unwrap_or_default().to_u32(),
+            ));
+        }
+        Ok(l)
+    }
+
+    async fn sc_get_chatlist_items_by_entries(
+        &self,
+        entries: Vec<ChatListEntry>,
+    ) -> Result<HashMap<u32, ChatListItemFetchResult>> {
+        // todo custom json deserializer for ChatListEntry?
+        let sc = self.selected_context().await?;
+        let mut result: HashMap<u32, ChatListItemFetchResult> = HashMap::new();
+        for (i, entry) in entries.iter().enumerate() {
+            result.insert(
+                i.try_into().unwrap(),
+                match _get_chat_list_items_by_id(&sc, entry).await {
+                    Ok(res) => res,
+                    Err(err) => ChatListItemFetchResult::Error {
+                        id: entry.0,
+                        error: format!("{:?}", err),
+                    },
+                },
+            );
+        }
+        Ok(result)
+    }
 }
 
 // what should be generated later
@@ -141,6 +420,18 @@ impl CommandApi {
             Account::get_typescript_type()
         ));
 
+        ts.push_str(&format!(
+            "export type {} = {};\n",
+            "ChatListEntryType",
+            ChatListEntry::get_typescript_type()
+        ));
+
+        ts.push_str(&format!(
+            "export type {} = {};\n",
+            "ChatListItemFetchResultType",
+            ChatListItemFetchResult::get_typescript_type()
+        ));
+
         // functions - prelude
         ts.push_str("\
             export class RawApi {\n\
@@ -149,8 +440,6 @@ impl CommandApi {
                 \t */\n\
                 \tconstructor (private json_transport: (methode: string, params?: any) => Promise<any>) {}\n"
         );
-
-        // functions
 
         fn gen_ts_body(method_name: &str, args: &str, return_type: &str, params: &str) -> String {
             format!(
@@ -164,32 +453,109 @@ impl CommandApi {
             )
         }
 
+        // functions
+
+        let mut args = "".to_owned();
+        args.push_str(&format!("{}:{}", "email", String::get_typescript_type()));
+        ts.push_str(&gen_ts_body(
+            "check_email_validity",
+            &args,
+            &bool::get_typescript_type_with_custom_type_support(),
+            "email",
+        ));
+
         ts.push_str(&gen_ts_body(
             "add_account",
             "",
-            &u32::get_typescript_type(),
+            &u32::get_typescript_type_with_custom_type_support(),
             "undefined",
         ));
 
         ts.push_str(&gen_ts_body(
             "get_all_account_ids",
             "",
-            &Vec::<u32>::get_typescript_type(),
+            &Vec::<u32>::get_typescript_type_with_custom_type_support(),
             "undefined",
         ));
 
         ts.push_str(&gen_ts_body(
             "get_all_accounts",
             "",
-            &Vec::<Account>::get_typescript_type(),
+            &Vec::<Account>::get_typescript_type_with_custom_type_support(),
             "undefined",
         ));
 
+        let mut args = "".to_owned();
+        args.push_str(&format!(
+            "{}:{}",
+            "id",
+            u32::get_typescript_type_with_custom_type_support()
+        ));
+        ts.push_str(&gen_ts_body("select_account", &args, "void", "{id}"));
+
+        let mut args = "".to_owned();
+        args.push_str(&format!(
+            "{}:{}",
+            "key",
+            String::get_typescript_type_with_custom_type_support()
+        ));
         ts.push_str(&gen_ts_body(
-            "select_account",
-            &format!("{}:{}", "id", u32::get_typescript_type()),
-            "void",
-            "{id}",
+            "sc_get_config",
+            &args,
+            &Option::<String>::get_typescript_type_with_custom_type_support(),
+            "{key}",
+        ));
+
+        let mut args = "".to_owned();
+        args.push_str(&format!(
+            "{}:{}",
+            "keys",
+            Vec::<String>::get_typescript_type_with_custom_type_support()
+        ));
+        ts.push_str(&gen_ts_body(
+            "sc_batch_get_config",
+            &args,
+            &HashMap::<String, Option<String>>::get_typescript_type_with_custom_type_support(),
+            "{keys}",
+        ));
+
+        let mut args = "".to_owned();
+        args.push_str(&format!(
+            "{}:{}",
+            "list_flags",
+            u32::get_typescript_type_with_custom_type_support()
+        ));
+        args.push(',');
+        args.push_str(&format!(
+            "{}:{}",
+            "query_string",
+            Option::<String>::get_typescript_type_with_custom_type_support()
+        ));
+        args.push(',');
+        args.push_str(&format!(
+            "{}:{}",
+            "query_contact_id",
+            Option::<u32>::get_typescript_type_with_custom_type_support()
+        ));
+        ts.push_str(&gen_ts_body(
+            "sc_get_chatlist_entries",
+            &args,
+            &Vec::<ChatListEntry>::get_typescript_type_with_custom_type_support(),
+            "{list_flags, query_string, query_contact_id}",
+        ));
+
+        let mut args = "".to_owned();
+        args.push_str(&format!(
+            "{}:{}",
+            "entries",
+            Vec::<ChatListEntry>::get_typescript_type_with_custom_type_support()
+        ));
+        ts.push_str(&gen_ts_body(
+            "sc_get_chatlist_items_by_entries",
+            &args,
+            &HashMap::<u32, ChatListItemFetchResult>::get_typescript_type_with_custom_type_support(
+            ),
+            "{entries}",
         ));
 
         ts.push_str("}");
