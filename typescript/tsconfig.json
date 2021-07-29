@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+      "outDir": "dist",
+      "target": "ES2016",
+      "module": "commonjs",
+      "declaration": true,
+      "esModuleInterop": true,
+      "noImplicitAny": true,
+      "isolatedModules": true
+    },
+    "compileOnSave": false
+  }
+  

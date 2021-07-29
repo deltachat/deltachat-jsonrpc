@@ -16,8 +16,8 @@ mod test {
 
         match &mut input {
             syn::Type::Path(syn::TypePath { path, .. }) => {
-                let nPseg = path.segments.last_mut();
-                println!("{:?}", nPseg);
+                let n_pseg = path.segments.last_mut();
+                println!("{:?}", n_pseg);
             }
             _ => unimplemented!(),
         }
@@ -371,7 +371,7 @@ fn generate_get_typescript_function(
                         \t/**\n\
                         \t * @param json_transport function that executes a jsonrpc call and throws an error if one occured\n\
                         \t */\n\
-                        \tconstructor (private json_transport: (methode: string, params?: any) => Promise<any>) {}\n"
+                        \tconstructor (private json_transport: (method: string, params?: any) => Promise<any>) {}\n"
                 );
 
                 // functions

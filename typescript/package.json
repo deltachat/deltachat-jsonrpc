@@ -1,0 +1,24 @@
+{
+  "name": "dc_cmd_api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/deltachat.js",
+  "scripts": {
+    "test": "npm run check_ts",
+    "build": "npm run generate_bindings && tsc",
+    "check_ts": "tsc --noEmit",
+    "generate_bindings": "cargo run --bin gen_ts > src/bindings.ts && prettier -w src/bindings.ts",
+    "example:build": "esbuild example/src/script.js --bundle --target=es2015 --format=cjs > example/browser_example.js",
+    "example:run": "npm run build && npm run example:build && firefox --devtools example/browser-example.html"
+  },
+  "author": "",
+  "dependencies": {
+    "isomorphic-ws": "^4.0.1",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/ws": "^7.2.4",
+    "esbuild": "^0.12.16"
+  }
+}

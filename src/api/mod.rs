@@ -43,12 +43,12 @@ enum Account {
 
 impl ReturnType for Account {
     fn get_typescript_type() -> String {
-        "{ id: number } | { id: number, display_name: string | null, addr: string | null, profile_image: string | null, color: string }".to_owned()
+        "{ id: number, type: \"unconfigured\" } | { id: number, type: \"configured\", display_name: string | null, addr: string | null, profile_image: string | null, color: string }".to_owned()
     }
 
     fn into_json_value(self) -> Value {
         match self {
-            Account::Unconfigured { id } => json!({ "id": id }),
+            Account::Unconfigured { id } => json!({ "id": id, "type": "unconfigured" }),
             Account::Configured {
                 id,
                 display_name,
@@ -57,6 +57,7 @@ impl ReturnType for Account {
                 color,
             } => json!({
                "id": id,
+               "type": "configured",
                "display_name": display_name,
                "addr": addr,
                "profile_image": profile_image,
@@ -334,6 +335,14 @@ impl CommandApi {
 
     async fn select_account(&self, id: u32) -> Result<()> {
         self.manager.select_account(id).await
+    }
+
+    async fn get_selected_account_id(&self) -> Option<u32> {
+        // TODO use the simpler api when availible: https://github.com/deltachat/deltachat-core-rust/pull/2570
+        match self.manager.get_selected_account().await {
+            Some(ctx) => Some(ctx.get_id()),
+            None => None
+        }
     }
 
     // ---------------------------------------------
