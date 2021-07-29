@@ -12,16 +12,6 @@ export type Account_Type =
 export type ChatListEntry_Type = [number, number];
 export type ChatListItemFetchResult_Type =
   | {
-      type: "DeadDrop";
-      lastUpdated: number;
-      messageId: number;
-      senderAddress: string;
-      senderContactId: number;
-      senderName: string;
-      summaryText1: string;
-      summaryText2: string;
-    }
-  | {
       type: "ChatListItem";
       id: number;
       name: string;
@@ -41,6 +31,7 @@ export type ChatListItemFetchResult_Type =
       isSelfTalk: boolean;
       isSendingLocation: boolean;
       isProtected: boolean;
+      isContactRequest: boolean;
     }
   | { type: "ArchiveLink" }
   | { type: "Error"; id: number; error: string };

@@ -106,16 +106,7 @@ enum ChatListItemFetchResult {
         is_archived: bool,
         is_pinned: bool,
         is_muted: bool,
-    },
-    #[serde(rename_all = "camelCase")]
-    DeadDrop {
-        last_updated: i64,
-        sender_name: String,
-        sender_address: String,
-        sender_contact_id: u32,
-        message_id: u32,
-        summary_text1: String,
-        summary_text2: String,
+        is_contact_request: bool,
     },
     ArchiveLink,
     #[serde(rename_all = "camelCase")]
@@ -128,16 +119,6 @@ enum ChatListItemFetchResult {
 impl ReturnType for ChatListItemFetchResult {
     fn get_typescript_type() -> String {
         "\n | { \
-            type: \"DeadDrop\"; \
-            lastUpdated: number; \
-            messageId: number; \
-            senderAddress: string; \
-            senderContactId: number; \
-            senderName: string; \
-            summaryText1: string; \
-            summaryText2: string; \
-          } \
-        | { \
             type: \"ChatListItem\"; \
             id: number; \
             name: string; \
@@ -157,6 +138,7 @@ impl ReturnType for ChatListItemFetchResult {
             isSelfTalk: boolean; \
             isSendingLocation: boolean; \
             isProtected: boolean; \
+            isContactRequest: boolean; \
           } \
         | { type: \"ArchiveLink\" } \
         | { \
@@ -193,25 +175,6 @@ async fn _get_chat_list_items_by_id(
 
     let summary_text1 = summary.get_text1().unwrap_or("").to_owned();
     let summary_text2 = summary.get_text2().unwrap_or("").to_owned();
-
-    if chat_id.is_deaddrop() {
-        let last_message_id =
-            last_msgid.ok_or_else(|| anyhow!("couldn't fetch last chat message on deadrop"))?;
-        let last_message = deltachat::message::Message::load_from_db(&ctx, last_message_id).await?;
-
-        let contact =
-            deltachat::contact::Contact::load_from_db(&ctx, last_message.get_from_id()).await?;
-
-        return Ok(ChatListItemFetchResult::DeadDrop {
-            last_updated: last_message.get_timestamp() * 1000,
-            sender_name: contact.get_display_name().to_owned(),
-            sender_address: contact.get_addr().to_owned(),
-            sender_contact_id: contact.get_id(),
-            message_id: last_message_id.to_u32(),
-            summary_text1,
-            summary_text2,
-        });
-    }
 
     let visibility = chat.get_visibility();
 
@@ -254,6 +217,7 @@ async fn _get_chat_list_items_by_id(
         is_archived: visibility == ChatVisibility::Archived,
         is_pinned: visibility == ChatVisibility::Pinned,
         is_muted: chat.is_muted(),
+        is_contact_request: chat.is_contact_request()
     })
 }
 
