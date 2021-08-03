@@ -11,7 +11,8 @@
     "example:build": "esbuild example/src/script.js --bundle --target=es2015 --format=cjs > example/browser_example.js",
     "example:run": "npm run build && npm run example:build && firefox --devtools example/browser-example.html"
   },
-  "author": "",
+  "author": "Delta Chat Developers (ML) <delta@codespeak.net>",
+  "license": "MPL-2.0",
   "dependencies": {
     "isomorphic-ws": "^4.0.1",
     "prettier": "^2.3.2",
