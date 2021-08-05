@@ -262,6 +262,10 @@ impl CommandApi {
         self.manager.add_account().await
     }
 
+    async fn remove_account(&self, account_id: u32) -> Result<()> {
+        self.manager.remove_account(account_id).await
+    }
+
     async fn get_all_account_ids(&self) -> Vec<u32> {
         self.manager.get_all().await
     }

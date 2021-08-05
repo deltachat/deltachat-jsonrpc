@@ -48,6 +48,9 @@ export class RawApi {
   public async add_account(): Promise<number> {
     return await this.json_transport("add_account", undefined);
   }
+  public async remove_account(account_id: number): Promise<void> {
+    return await this.json_transport("remove_account", { account_id });
+  }
   public async get_all_account_ids(): Promise<number[]> {
     return await this.json_transport("get_all_account_ids", undefined);
   }

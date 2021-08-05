@@ -22,7 +22,8 @@
 
 - [ ] mocha integration test for ts api
 - [ ] coverage for a majority of the API
-- [ ] Blobs served somehow
+- [ ] Blobs served
+- [ ] Blob upload (for attachments, setting profile-picture, importing backup and so on)
 - [ ] Web push API? At least some kind of notification hook closure this lib can accept.
 
 ## Other Ideas
@@ -64,6 +65,43 @@ struct QrCodeResponse = {
   text1: String
 }
 
+struct Contact {
+    address: String
+    color: String
+    auth_name: String
+    status: String
+    display_name: String
+    id: u32
+    name: String
+    profile_image: String //BLOBS
+    name_and_addr: String
+    is_blocked: bool
+    is_verified: bool
+}
+
+struct FullChat {
+  id: u32
+  name: String
+  is_protected: bool
+  profile_image: String  //BLOBS
+  archived: bool
+  // subtitle will be moved to frontend because it uses translation functions
+  r#type: u32
+  is_unpromoted: bool
+  is_self_talk: bool
+  contacts: Vec<Contact>
+  contact_ids: Vec<u32>
+  color: String
+  fresh_message_counter: u32
+  is_group: bool
+  is_deaddrop: bool
+  is_device_chat: bool
+  self_in_group: bool
+  muted: bool
+  ephemeral_timer: u32
+  //TODO look if there are more important properties in newer core versions
+}
+
 
 impl Api {
 
@@ -86,6 +124,27 @@ async fn sc_join_secure_join(&self, qrCode: String) -> Result<u32> {}
 async fn sc_stop_ongoing_process(&self) -> Result<u32> {}
 async fn sc_check_qr_code(&self, qrCode: String) -> Result<QrCodeResponse> {}
 
+// login ----------------------------------------------------
+
+// INFO: login functions need to call stop&start io where applicable
+
+// login.newLogin:
+// do instead in frontend:
+//   1. call `add_account`
+//   2. call `select_account`
+//   3. call `sc_configure`
+
+// login.getLogins - is already implemented: `get_all_accounts`
+
+// login.loadAccount - Basically `select_account`
+
+/// set config for the credentials before calling this
+async fn sc_configure(&self) -> Result<()>
+
+// login.logout -> TODO: unselect account, which isn't implemented in the core yet
+
+// login.forgetAccount -> `remove_account`
+
 // autocrypt ----------------------------------------------------------
 
 async fn sc_autocrypt_initiate_key_transfer(&self) -> Result<String> {}
@@ -93,83 +152,70 @@ async fn sc_autocrypt_continue_key_transfer(&self, message_id: u32, key: String)
 
 // backup -------------------------------------------------------------
 
-// NEEDS_THE_BLOB_QUESTION_ANSWERED_EVENTUALLY
-async fn sc_backup_export(&self, out_dir:String) -> Result<()> {}
-// NEEDS_THE_BLOB_QUESTION_ANSWERED_EVENTUALLY
-async fn sc_backup_import(&self, file:String) -> Result<()> {} // will not return the same as in desktop because this function imports bacup to the current context unlike it was in desktop
+// INFO: backup functions need to call stop&start io
 
+// NEEDS_THE_BLOB_QUESTION_ANSWERED_EVENTUALLY
+async fn sc_backup_export(&self, out_dir: String) -> Result<()> {}
+// NEEDS_THE_BLOB_QUESTION_ANSWERED_EVENTUALLY
+async fn sc_backup_import(&self, file: String) -> Result<()> {} // will not return the same as in desktop because this function imports backup to the current context unlike it was in desktop
+
+// chatList -----------------------------------------------------------
+
+// chatList.selectChat - will be removed from desktop
+// chatList.getSelectedChatId - will be removed from desktop
+// chatList.onChatModified - will be removed from desktop
+
+async fn sc_chatlist_get_full_chat_by_id(&self, chat_id:number) -> Result<FullChat>
+
+async fn sc_chatlist_get_general_fresh_message_counter(&self) -> Result<u32> // this method might be used for a favicon badge counter
+
+// contacts ------------------------------------------------------------
+
+async fn sc_contacts_block(&self, contact_id: u32) -> Result<()>
+
+async fn sc_contacts_unblock(&self, contact_id: u32) -> Result<()>
+
+async fn sc_contacts_change_nickname(&self, contact_id: u32, new_name: String) -> Result<()>
+
+/// Returns contact id of the created or existing contact
+async fn sc_contacts_create_contact(&self, email: String, name: Option<String>) -> Result<u32>
+
+/// Returns contact id of the created or existing DM chat with that contact
+async fn sc_contacts_create_chat_by_contact_id(&self, contact_id: u32) -> Result<u32> //do it without the side effects
+
+async fn sc_contacts_get_contact(&self, contact_id: u32) -> Result<Contact>
+
+async fn sc_contacts_get_contact_ids(&self, list_flags: u32, query: String) -> Result<Vec<u32>>
+
+// formerly called getContacts2 in desktop
+async fn sc_contacts_get_contacts(&self, list_flags: u32, query: String) -> Result<Vec<Contact>>
+
+async fn sc_contacts_get_contacts_by_ids(&self, ids: Vec<u32>) -> Result<HashMap<u32, Contact>>
+
+// contacts.getChatIdByContactId - very similar to sc_contacts_create_chat_by_contact_id
+// contacts.getDMChatId -  very similar to sc_contacts_create_chat_by_contact_id
+
+async fn sc_contacts_get_encryption_info(&self, contact_id: u32) -> Result<String>
+
+async fn sc_contacts_lookup_contact_id_by_addr(&self, email: String) -> Result<u32>
 
 
 }
 
-class DeltaRemote {
+```
+```ts
 
-  // chatList -----------------------------------------------------------
-  call(fnName: 'chatList.selectChat', chatId: number): Promise<FullChat>
-  call(fnName: 'chatList.getSelectedChatId'): Promise<number>
-  call(fnName: 'chatList.onChatModified', chatId: number): Promise<void>
+class DeltaRemote {
+  call(fnName: '', login: DeltaChatAccount): Promise<void>
+  call(fnName: 'login.getLastLoggedInAccount'): Promise<DeltaChatAccount>
   call(
-    fnName: 'chatList.getChatListIds',
-    listFlags: number,
-    queryStr: string,
-    queryContactId: number
-  ): Promise<number[]>
-  call(
-    fnName: 'chatList.getChatListEntries',
-    listFlags: number,
-    queryStr: string,
-    queryContactId: number
-  ): Promise<[number, number][]>
-  call(
-    fnName: 'chatList.getChatListItemsByEntries',
-    entries: [number, number][]
-  ): Promise<{
-    [key: number]: ChatListItemType
-  }>
-  call(fnName: 'chatList.getFullChatById', chatId: number): Promise<FullChat>
-  call(fnName: 'chatList.getGeneralFreshMessageCounter'): Promise<number> // this method might be used for a favicon badge counter
-  // contacts ------------------------------------------------------------
-  call(fnName: 'contacts.unblockContact', contactId: number): Promise<void>
-  call(fnName: 'contacts.blockContact', contactId: number): Promise<void>
-  call(
-    fnName: 'contacts.changeNickname',
-    contactId: number,
-    name: string
-  ): Promise<number>
-  call(
-    fnName: 'contacts.createContact',
-    email: string,
-    name?: string
-  ): Promise<number>
-  call(
-    fnName: 'contacts.createChatByContactId',
-    contactId: number
-  ): Promise<number>
-  call(fnName: 'contacts.getContact', contactId: number): Promise<DCContact>
-  call(
-    fnName: 'contacts.getContactIds',
-    listFlags: number,
-    queryStr: string
-  ): Promise<number[]>
-  call(
-    fnName: 'contacts.getContacts',
-    ids: number[]
-  ): Promise<{ [id: number]: DCContact }>
-  call(
-    fnName: 'getContacts2',
-    listFlags: number,
-    queryStr: string
-  ): Promise<DCContact[]>
-  call(
-    fnName: 'contacts.getChatIdByContactId',
-    contactId: number
-  ): Promise<number>
-  call(fnName: 'contacts.getDMChatId', contactId: number): Promise<number>
-  call(fnName: 'contacts.getEncryptionInfo', contactId: number): Promise<string>
-  call(fnName: 'contacts.lookupContactIdByAddr', email: string): Promise<number>
+    fnName: 'login.updateCredentials',
+    credentials: Credentials
+  ): Promise<boolean>
   // chat ---------------------------------------------------------------
   call(
     fnName: 'chat.getChatMedia',
+    chatId: number,
     msgType1: number,
     msgType2: number
   ): Promise<MessageType[]>
@@ -245,20 +291,6 @@ class DeltaRemote {
     timestampFrom: number,
     timestampTo: number
   ): Promise<JsonLocations>
-  // login ----------------------------------------------------
-  call(
-    fnName: 'login.newLogin',
-    credentials: Credentials
-  ): Promise<DeltaChatAccount>
-  call(fnName: 'login.getLogins'): Promise<any>
-  call(fnName: 'login.loadAccount', login: DeltaChatAccount): Promise<boolean>
-  call(fnName: 'login.logout'): Promise<void>
-  call(fnName: 'login.forgetAccount', login: DeltaChatAccount): Promise<void>
-  call(fnName: 'login.getLastLoggedInAccount'): Promise<DeltaChatAccount>
-  call(
-    fnName: 'login.updateCredentials',
-    credentials: Credentials
-  ): Promise<boolean>
 
   // NOTHING HERE that is called directly from the frontend, yet
   // messageList --------------------------------------------------------
@@ -383,14 +415,14 @@ class DeltaRemote {
     fnName: 'stickers.getStickers'
   ): Promise<{
     [key: string]: string[]
-  }>
+  }> // todo move to extras? because its not directly elated to core
   // context ------------------------------------------------------------
   call(fnName: 'context.maybeNetwork'): Promise<void>
   // burner accounts ------------------------------------------------------------
   call(
     fnName: 'burnerAccounts.create',
     url: string
-  ): Promise<{ email: string; password: string }>
+  ): Promise<{ email: string; password: string }> // think about how to improve that api
   // extras -------------------------------------------------------------
   call(fnName: 'extras.getLocaleData', locale: string): Promise<LocaleData>
   call(fnName: 'extras.setLocale', locale: string): Promise<void>
@@ -414,4 +446,4 @@ export const DeltaBackend = new DeltaRemote()
 ```
 
 
-after that, or wile doing it adjust api to be more complete
+after that, or while doing it adjust api to be more complete

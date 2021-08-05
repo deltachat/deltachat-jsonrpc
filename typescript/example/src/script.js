@@ -28,7 +28,7 @@ function addResultEntry(message) {
   resultDiv.prepend(node);
 }
 
-document.getElementById("connect").onclick = async ev => {
+document.getElementById("connect").onclick = async (ev) => {
   ev.target["disabled"] = true;
   try {
     await dc.connect();
@@ -42,7 +42,7 @@ document.getElementById("connect").onclick = async ev => {
 
 const ec_input = document.getElementById("email_check_input");
 const ex_result = document.getElementById("email_check_result");
-document.getElementById("email_check_button").onclick = async ev => {
+document.getElementById("email_check_button").onclick = async (ev) => {
   ex_result.innerText = "";
   try {
     const valid = await dc.raw_api.check_email_validity(ec_input["value"]);
@@ -53,7 +53,9 @@ document.getElementById("email_check_button").onclick = async ev => {
 };
 
 async function getAccounts() {
-  const selectAccount = async id => {
+  const accounts_container = document.getElementById("accounts");
+
+  const selectAccount = async (id) => {
     try {
       await dc.raw_api.select_account(id);
       await getAccounts();
@@ -62,12 +64,26 @@ async function getAccounts() {
     }
   };
 
+  const removeAccount = async (id) => {
+    try {
+      if (!confirm(`Delete Account ${id}?`)) {
+        return;
+      }
+      await dc.raw_api.remove_account(id);
+      await getAccounts();
+    } catch (error) {
+      addResultEntry(error);
+    }
+  };
+
   let accounts = await dc.raw_api.get_all_accounts();
   let selected_account = await dc.raw_api.get_selected_account_id();
-  const account_elements = accounts.map(account => {
+  const account_elements = accounts.map((account) => {
     let is_selected = account.id == selected_account;
     const selectAccountButton = h("button", "select");
     selectAccountButton.onclick = selectAccount.bind(null, account.id);
+    const removeAccountButton = h("button", "remove");
+    removeAccountButton.onclick = removeAccount.bind(null, account.id);
     if (account.type == "configured") {
       let avatar;
       if (account.display_name) {
@@ -91,7 +107,8 @@ async function getAccounts() {
           avatar,
           h("p", account.display_name, "title"),
           h("p", account.addr, "subtitle"),
-          selectAccountButton
+          selectAccountButton,
+          removeAccountButton,
         ],
         `account${is_selected ? " selected" : ""}`
       );
@@ -102,7 +119,8 @@ async function getAccounts() {
           h("div", account.id.toString(), "id"),
           h("div", account.id.toString(), "avatar"),
           h("p", "Unconfigured", "title"),
-          selectAccountButton
+          selectAccountButton,
+          removeAccountButton,
         ],
         `account${is_selected ? " selected" : ""}`
       );
@@ -110,15 +128,29 @@ async function getAccounts() {
   });
   const deselectAccountsButton = h("button", "deselect account");
   deselectAccountsButton.onclick = selectAccount.bind(null, 0);
-  resultDiv.prepend(
+  const newAccountsButton = h("button", "new account");
+  newAccountsButton.onclick = async () => {
+    try {
+      const id_of_new_account = await dc.raw_api.add_account();
+      addResultEntry(`created new account with id: ${id_of_new_account}`);
+      await getAccounts();
+    } catch (error) {
+      addResultEntry(error);
+    }
+  };
+
+  accounts_container.innerText = "";
+  accounts_container.append(
     h(
       "div",
-      accounts.length > 0
-        ? [...account_elements, deselectAccountsButton]
-        : h("h4", "No accounts"),
+      accounts.length > 0 ? account_elements : h("h4", "No accounts"),
       "accounts_box"
     )
   );
+  if (accounts.length > 0) {
+    accounts_container.append(deselectAccountsButton);
+  }
+  accounts_container.append(newAccountsButton);
 }
 
 document.getElementById("get_accounts_button").onclick = async () => {

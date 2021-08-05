@@ -15,12 +15,15 @@
         border: grey 1px solid;
       }
 
-      .accounts_box {
+      #accounts {
         border: 2px solid grey;
-        display: flex;
-        flex-wrap: 1;
-        flex-direction: row;
         padding: 14pt;
+      }
+
+      .accounts_box {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
       }
 
       .accounts_box .account {
@@ -29,6 +32,7 @@
         border: 1px solid grey;
         border-radius: 16pt;
         align-items: center;
+        margin: 5px;
       }
 
       .accounts_box .account.selected {
@@ -78,7 +82,9 @@
         </fieldset>
       </form>
 
-      <button id="get_accounts_button">Get account list</button>
+      <div id="accounts">accounts not loaded, press the refresh button below</div>
+
+      <button id="get_accounts_button">Refresh account list</button>
     </div>
 
     <div style="display: none" id="context_methods">
