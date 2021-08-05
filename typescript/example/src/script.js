@@ -15,11 +15,11 @@ window["dc"] = dc;
 
 const resultDiv = document.getElementById("result");
 
-//   dc.on(Event_TypeID.INFO, console.info);
-//   dc.on(Event_TypeID.WARNING, console.warn);
-//   dc.on(Event_TypeID.ERROR, console.error);
-//   dc.on(Event_TypeID.ERROR_NETWORK, console.error);
-//   dc.on(Event_TypeID.ERROR_SELF_NOT_IN_GROUP, console.error);
+dc.on("INFO", console.info);
+dc.on("WARNING", console.warn);
+dc.on("ERROR", console.error);
+dc.on("ERROR_SELF_NOT_IN_GROUP", console.error);
+dc.on("CONNECTIVITY_CHANGED", console.info.bind(null, "Connectivity Changed"));
 // possibly also log to webview in resultDiv
 
 function addResultEntry(message) {
@@ -39,6 +39,16 @@ document.getElementById("connect").onclick = async (ev) => {
     ev.target["disabled"] = false;
   }
 };
+
+dc.on("socket_connection_change", (isConnected) => {
+  // console.info("socket_connection_change", {isConnected})
+  document.getElementById("connect")["disabled"] = isConnected;
+  if (!isConnected) {
+    addResultEntry("🔌 connection to backend lost 🔌");
+  } else {
+    addResultEntry("🔌 connection to backend established 🔌");
+  }
+});
 
 const ec_input = document.getElementById("email_check_input");
 const ex_result = document.getElementById("email_check_result");

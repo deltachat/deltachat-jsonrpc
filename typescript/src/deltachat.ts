@@ -2,8 +2,13 @@ import { RawApi } from "./bindings";
 
 import WebSocket from "isomorphic-ws";
 import { JSON_RPC_Error } from "./json_rpc_error";
+import { EventEmitter } from "eventemitter3";
+import { get_event_name_from_id } from "./events";
 
-export class DeltaChat {
+export class DeltaChat extends EventEmitter<
+  ReturnType<typeof get_event_name_from_id> | "socket_connection_change",
+  any
+> {
   raw_api: RawApi = new RawApi(this.call.bind(this));
   private backend_connection: boolean = false;
 
@@ -14,7 +19,9 @@ export class DeltaChat {
 
   private socket: WebSocket;
 
-  constructor(public address: string) {}
+  constructor(public address: string) {
+    super();
+  }
 
   async connect(): Promise<void> {
     return new Promise((res, rej) => {
@@ -23,19 +30,22 @@ export class DeltaChat {
       const self = this; // socket event callback overwrites this to undefined sometimes
 
       this.socket.addEventListener("message", this.onMessage.bind(self));
-      this.socket.addEventListener("error", event => {
+      this.socket.addEventListener("error", (event) => {
         console.error(event);
         // TODO handle error
         self.backend_connection = false;
+        this.emit("socket_connection_change", false)
         rej("socket error");
       });
-      this.socket.addEventListener("close", event => {
+      this.socket.addEventListener("close", (event) => {
         console.debug("socket is closed now");
         self.backend_connection = false;
+        this.emit("socket_connection_change", false)
       });
-      this.socket.addEventListener("open", event => {
+      this.socket.addEventListener("open", (event) => {
         console.debug("socket is open now");
         self.backend_connection = true;
+        this.emit("socket_connection_change", true)
         res();
       });
     });
@@ -52,30 +62,39 @@ export class DeltaChat {
       return;
     }
     console.debug("<--", answer);
-    //TODO handle EVENTS ? if we should do them in this connection too
-
-    // handle command results
-    if (!answer.id) {
-      throw new Error("invocation_id missing");
-    }
-    const callback = this.callbacks[answer.id];
-    if (!callback) {
-      throw new Error(`No callback found for invocation_id ${answer.id}`);
-    }
-
-    if (answer.error) {
-      callback.rej(
-        new JSON_RPC_Error(
-          answer.error.code,
-          answer.error.message,
-          answer.error.data
-        )
+    if (answer.method === "event") {
+      if (!answer.params) {
+        throw new Error("invalid event, data missing");
+      }
+      this.emit(
+        get_event_name_from_id(answer.params.id),
+        answer.params.field1,
+        answer.params.field2
       );
     } else {
-      callback.res(answer.result || null);
-    }
+      // handle command results
+      if (!answer.id) {
+        throw new Error("invocation_id missing");
+      }
+      const callback = this.callbacks[answer.id];
+      if (!callback) {
+        throw new Error(`No callback found for invocation_id ${answer.id}`);
+      }
 
-    this.callbacks[answer.id] = null;
+      if (answer.error) {
+        callback.rej(
+          new JSON_RPC_Error(
+            answer.error.code,
+            answer.error.message,
+            answer.error.data
+          )
+        );
+      } else {
+        callback.res(answer.result || null);
+      }
+
+      this.callbacks[answer.id] = null;
+    }
   }
 
   private call(method: string, params?: any): Promise<any> {
@@ -92,7 +111,7 @@ export class DeltaChat {
       jsonrpc: "2.0",
       method,
       id: invocation_id,
-      params
+      params,
     };
 
     try {
@@ -111,7 +130,7 @@ export class DeltaChat {
 
   _currentUnresolvedCallCount() {
     return Object.keys(this.callbacks).filter(
-      key => this.callbacks[Number(key)] !== null
+      (key) => this.callbacks[Number(key)] !== null
     ).length;
   }
 }

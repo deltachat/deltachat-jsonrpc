@@ -25,6 +25,8 @@ use serde::{Deserialize, Serialize};
 pub(crate) mod return_type;
 use return_type::*;
 
+pub mod events;
+
 use crate::custom_return_type;
 
 enum Account {
@@ -217,7 +219,7 @@ async fn _get_chat_list_items_by_id(
         is_archived: visibility == ChatVisibility::Archived,
         is_pinned: visibility == ChatVisibility::Pinned,
         is_muted: chat.is_muted(),
-        is_contact_request: chat.is_contact_request()
+        is_contact_request: chat.is_contact_request(),
     })
 }
 
@@ -309,7 +311,7 @@ impl CommandApi {
         // TODO use the simpler api when availible: https://github.com/deltachat/deltachat-core-rust/pull/2570
         match self.manager.get_selected_account().await {
             Some(ctx) => Some(ctx.get_id()),
-            None => None
+            None => None,
         }
     }
 
@@ -342,6 +344,15 @@ impl CommandApi {
             result.insert(key.clone(), sc.get_config(Config::from_str(&key)?).await?);
         }
         Ok(result)
+    }
+
+    /// set config for the credentials before calling this
+    async fn sc_configure(&self) -> Result<()> {
+        let sc = self.selected_context().await?;
+        self.manager.stop_io().await;
+        sc.configure().await?;
+        self.manager.start_io().await;
+        Ok(())
     }
 
     async fn sc_get_chatlist_entries(

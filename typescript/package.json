@@ -14,6 +14,7 @@
   "author": "Delta Chat Developers (ML) <delta@codespeak.net>",
   "license": "MPL-2.0",
   "dependencies": {
+    "eventemitter3": "^4.0.7",
     "isomorphic-ws": "^4.0.1",
     "prettier": "^2.3.2",
     "typescript": "^4.3.5"

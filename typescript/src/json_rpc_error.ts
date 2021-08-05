@@ -16,7 +16,7 @@ enum JSON_RPC_Error_Code {
   ServerError,
 
   /** Error code */
-  Custom
+  Custom,
 }
 
 export class JSON_RPC_Error extends Error {

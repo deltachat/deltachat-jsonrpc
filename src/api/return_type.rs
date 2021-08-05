@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonrpc_core::serde_json::{Map, Value, json};
+use jsonrpc_core::serde_json::{json, Map, Value};
 
 /** idea of the return type abstraction, versus using json directly is that this way other formats can be easialy added in the future */
 pub(crate) trait ReturnType {

@@ -14,9 +14,10 @@
 
 - [WIP] Web socket server
 - [WIP] Web socket client (ts)
-  - [ ] backend connection state changed events
+  - [X] backend connection state changed events
   - [ ] Reconnect on connection loss / connection state
-- [ ] Events
+  - [ ] find a way to type the event emitter callback functions
+- [X] Events
 
 ## MVP
 
@@ -138,9 +139,6 @@ async fn sc_check_qr_code(&self, qrCode: String) -> Result<QrCodeResponse> {}
 // login.getLogins - is already implemented: `get_all_accounts`
 
 // login.loadAccount - Basically `select_account`
-
-/// set config for the credentials before calling this
-async fn sc_configure(&self) -> Result<()>
 
 // login.logout -> TODO: unselect account, which isn't implemented in the core yet
 

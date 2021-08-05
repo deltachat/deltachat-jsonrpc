@@ -1,5 +1,7 @@
 pub mod api;
 
+pub use api::events;
+
 #[cfg(test)]
 mod tests {
     use super::api::CommandApi;
@@ -8,7 +10,7 @@ mod tests {
 
     #[async_std::test]
     async fn basic_json_rpc_functionality() -> anyhow::Result<()> {
-        println!("{}", "");
+        // println!("{}", "");
         let tmp_dir = TempDir::new().unwrap().path().into();
 
         println!("tmp_dir: {:?}", tmp_dir);

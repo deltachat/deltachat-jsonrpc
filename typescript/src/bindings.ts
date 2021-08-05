@@ -74,6 +74,9 @@ export class RawApi {
   ): Promise<{ [key: string]: string | null }> {
     return await this.json_transport("sc_batch_get_config", { keys });
   }
+  public async sc_configure(): Promise<void> {
+    return await this.json_transport("sc_configure", undefined);
+  }
   public async sc_get_chatlist_entries(
     list_flags: number,
     query_string: string | null,
