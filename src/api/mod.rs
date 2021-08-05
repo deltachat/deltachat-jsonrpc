@@ -321,6 +321,12 @@ impl CommandApi {
 
     // TODO fn sc_send_message () -> {}
 
+    async fn sc_set_config(&self, key: String, value: Option<String>) -> Result<()> {
+        let sc = self.selected_context().await?;
+        let value = value.as_ref().map(String::as_ref);
+        Ok(sc.set_config(Config::from_str(&key)?, value).await?)
+    }
+
     async fn sc_get_config(&self, key: String) -> Result<Option<String>> {
         let sc = self.selected_context().await?;
         Ok(sc.get_config(Config::from_str(&key)?).await?)

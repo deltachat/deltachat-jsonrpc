@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use jsonrpc_core::serde_json::{json, Value};
+use jsonrpc_core::serde_json::{Map, Value, json};
 
 /** idea of the return type abstraction, versus using json directly is that this way other formats can be easialy added in the future */
 pub(crate) trait ReturnType {
@@ -110,6 +110,7 @@ impl ReturnType for bool {
 impl<K, V> ReturnType for HashMap<K, V>
 where
     K: ReturnType,
+    K: std::fmt::Display,
     V: ReturnType,
 {
     fn get_typescript_type() -> String {
@@ -119,8 +120,12 @@ where
             V::get_typescript_type()
         )
     }
-    fn into_json_value(self) -> Value {
-        todo!()
+    fn into_json_value(mut self) -> Value {
+        let mut map = Map::new();
+        for (key, value) in self.drain() {
+            map.insert(format!("{}", key), value.into_json_value());
+        }
+        Value::Object(map)
     }
 
     fn makes_use_of_custom_ts_type() -> bool {

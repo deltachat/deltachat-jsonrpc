@@ -132,7 +132,8 @@ async fn sc_check_qr_code(&self, qrCode: String) -> Result<QrCodeResponse> {}
 // do instead in frontend:
 //   1. call `add_account`
 //   2. call `select_account`
-//   3. call `sc_configure`
+//   3. set credentials via set config
+//   4. call `sc_configure`
 
 // login.getLogins - is already implemented: `get_all_accounts`
 
@@ -144,6 +145,10 @@ async fn sc_configure(&self) -> Result<()>
 // login.logout -> TODO: unselect account, which isn't implemented in the core yet
 
 // login.forgetAccount -> `remove_account`
+
+// login.getLastLoggedInAccount -> `get_selected_account_id`
+
+// login.updateCredentials -> do instead: set config then call `sc_configure`
 
 // autocrypt ----------------------------------------------------------
 
@@ -206,12 +211,6 @@ async fn sc_contacts_lookup_contact_id_by_addr(&self, email: String) -> Result<u
 ```ts
 
 class DeltaRemote {
-  call(fnName: '', login: DeltaChatAccount): Promise<void>
-  call(fnName: 'login.getLastLoggedInAccount'): Promise<DeltaChatAccount>
-  call(
-    fnName: 'login.updateCredentials',
-    credentials: Credentials
-  ): Promise<boolean>
   // chat ---------------------------------------------------------------
   call(
     fnName: 'chat.getChatMedia',
@@ -365,18 +364,6 @@ class DeltaRemote {
     messageId: number
   ): Promise<string>
   // settings -----------------------------------------------------------
-  call(
-    fnName: 'settings.setConfig',
-    key: string,
-    value: string
-  ): Promise<number>
-  call(fnName: 'settings.getConfig', key: string): Promise<string>
-  call(
-    fnName: 'settings.getConfigFor',
-    keys: string[]
-  ): Promise<{
-    [key: string]: string
-  }>
   call(fnName: 'settings.keysImport', directory: string): Promise<void>
   call(fnName: 'settings.keysExport', directory: string): Promise<void>
   call(
@@ -395,11 +382,6 @@ class DeltaRemote {
     value: string | number | boolean
   ): Promise<boolean>
   call(fnName: 'settings.getDesktopSettings'): Promise<DesktopSettings>
-  call(
-    fnName: 'settings.setConfig',
-    key: string,
-    value: string | boolean
-  ): Promise<boolean>
   call(
     fnName: 'settings.saveBackgroundImage',
     file: string,

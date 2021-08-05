@@ -63,6 +63,9 @@ export class RawApi {
   public async get_selected_account_id(): Promise<number | null> {
     return await this.json_transport("get_selected_account_id", undefined);
   }
+  public async sc_set_config(key: string, value: string | null): Promise<void> {
+    return await this.json_transport("sc_set_config", { key, value });
+  }
   public async sc_get_config(key: string): Promise<string | null> {
     return await this.json_transport("sc_get_config", { key });
   }
