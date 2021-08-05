@@ -35,6 +35,12 @@
 - [ ] Look into unit-testing for the proc macros?
 - [ ] proc macro taking over doc comments to generated typescript file
 - [ ] GH action for tests (rust and typescript)
+  - [X] rust test
+  - [X] rust fmt
+  - [X] rust clippy
+  - [ ] tsc check
+  - [ ] prettier
+  - [ ] mocha
 - [ ] scripts to check&fix prettier formatting
 
 
