@@ -60,12 +60,6 @@ struct sendMessageParams {
   quote_message_id: Option<u32>,
 }
 
-struct ProviderInfo {
-    before_login_hint: String
-    overview_page: String
-    status: u32 // in reality this is an enum, but for simlicity and because it gets converted into a number anyway, we use an u32 here. 
-}
-
 struct QrCodeResponse = {
   state: u32 // also enum in reality, for simlicity u32 here
   id: u32
@@ -113,8 +107,6 @@ struct FullChat {
 impl Api {
 
 // root ---------------------------------------------------------------
-
-async fn get_provider_info(&self, email:String) -> Option<ProviderInfo> {}
 
 // 'updateBlockedContacts' - omited because it is an special desktop function that triggers an event
 

@@ -8,6 +8,7 @@ use deltachat::constants::*;
 use deltachat::contact::may_be_valid_addr;
 use deltachat::contact::Contact;
 use deltachat::context::get_info;
+use deltachat::provider::get_provider_info;
 use deltachat::{
     accounts::Accounts,
     chat::{Chat, ChatId},
@@ -72,6 +73,30 @@ impl ReturnType for Account {
 
     custom_return_type!("Account_Type".to_owned());
 }
+
+
+struct ProviderInfo {
+    before_login_hint: String,
+    overview_page: String,
+    status: u32 // in reality this is an enum, but for simlicity and because it gets converted into a number anyway, we use an u32 here. 
+}
+
+impl ReturnType for ProviderInfo {
+    fn get_typescript_type() -> String {
+        "{ before_login_hint: string, overview_page: string, status: 1 | 2 | 3 }".to_owned()
+    }
+
+    fn into_json_value(self) -> Value {
+        json!({
+            "before_login_hint": self.before_login_hint,
+            "overview_page": self.overview_page,
+            "status": self.status
+        })
+    }
+
+    custom_return_type!("ProviderInfo_Type".to_owned());
+}
+
 
 #[derive(Deserialize)]
 struct ChatListEntry(u32, u32);
@@ -264,6 +289,18 @@ impl CommandApi {
     async fn get_system_info(&self) -> BTreeMap<&'static str, String> {
         get_info()
     }
+
+    async fn get_provider_info(&self, email:String) -> Option<ProviderInfo> {
+        let provider = get_provider_info(&email).await;
+        provider.map(|p| 
+            ProviderInfo {
+                before_login_hint: p.before_login_hint.to_owned(),
+                overview_page: p.overview_page.to_owned(),
+                status: p.status.to_u32().unwrap(),
+            }
+        )
+    }
+
 
     // ---------------------------------------------
     //
