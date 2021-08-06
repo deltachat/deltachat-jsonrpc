@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use jsonrpc_core::serde_json::{json, Map, Value};
 
@@ -96,6 +96,17 @@ impl ReturnType for String {
     non_custom_return_type!();
 }
 
+impl ReturnType for &str {
+    fn get_typescript_type() -> String {
+        "string".to_owned()
+    }
+    fn into_json_value(self) -> Value {
+        Value::String(self.to_string())
+    }
+
+    non_custom_return_type!();
+}
+
 impl ReturnType for bool {
     fn get_typescript_type() -> String {
         "boolean".to_owned()
@@ -123,6 +134,44 @@ where
     fn into_json_value(mut self) -> Value {
         let mut map = Map::new();
         for (key, value) in self.drain() {
+            map.insert(format!("{}", key), value.into_json_value());
+        }
+        Value::Object(map)
+    }
+
+    fn makes_use_of_custom_ts_type() -> bool {
+        K::makes_use_of_custom_ts_type() || V::makes_use_of_custom_ts_type()
+    }
+
+    fn get_typescript_type_with_custom_type_support() -> String {
+        format!(
+            "{{ [key: {}]: {} }}",
+            K::get_typescript_type_with_custom_type_support(),
+            V::get_typescript_type_with_custom_type_support()
+        )
+    }
+
+    const IS_WRAPPER: bool = true;
+}
+
+
+
+impl<K, V> ReturnType for BTreeMap<K, V>
+where
+    K: ReturnType,
+    K: std::fmt::Display,
+    V: ReturnType,
+{
+    fn get_typescript_type() -> String {
+        format!(
+            "{{ [key: {}]: {} }}",
+            K::get_typescript_type(),
+            V::get_typescript_type()
+        )
+    }
+    fn into_json_value(self) -> Value {
+        let mut map = Map::new();
+        for (key, value) in self.into_iter() {
             map.insert(format!("{}", key), value.into_json_value());
         }
         Value::Object(map)

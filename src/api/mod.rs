@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::{collections::HashMap, str::FromStr};
 
@@ -6,6 +7,7 @@ use deltachat::config::Config;
 use deltachat::constants::*;
 use deltachat::contact::may_be_valid_addr;
 use deltachat::contact::Contact;
+use deltachat::context::get_info;
 use deltachat::{
     accounts::Accounts,
     chat::{Chat, ChatId},
@@ -250,14 +252,23 @@ impl CommandApi {
 #[gen_command_api]
 impl CommandApi {
     // ---------------------------------------------
+    //
     //       Misc context independent methods
+    //
     // ---------------------------------------------
     async fn check_email_validity(&self, email: String) -> bool {
         return may_be_valid_addr(&email);
     }
 
+    /// get general info, even if no context is selected 
+    async fn get_system_info(&self) -> BTreeMap<&'static str, String> {
+        get_info()
+    }
+
     // ---------------------------------------------
+    //
     //              Account Management
+    //
     // ---------------------------------------------
 
     async fn add_account(&self) -> Result<u32> {
@@ -316,12 +327,19 @@ impl CommandApi {
     }
 
     // ---------------------------------------------
-    // Functions for the selected Account / Context
+    //
+    //     Functions for the selected Account
+    //
     // ---------------------------------------------
 
     // TODO add a function where an parameter is a custom struct / object
 
     // TODO fn sc_send_message () -> {}
+
+    async fn sc_get_info(&self) -> Result<BTreeMap<&'static str, String>> {
+        let sc = self.selected_context().await?;
+        Ok(sc.get_info().await?)
+    }
 
     async fn sc_set_config(&self, key: String, value: Option<String>) -> Result<()> {
         let sc = self.selected_context().await?;
@@ -354,6 +372,10 @@ impl CommandApi {
         self.manager.start_io().await;
         Ok(())
     }
+
+    // ---------------------------------------------
+    //                  Chat List
+    // ---------------------------------------------
 
     async fn sc_get_chatlist_entries(
         &self,

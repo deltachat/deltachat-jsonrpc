@@ -45,6 +45,9 @@ export class RawApi {
   public async check_email_validity(email: string): Promise<boolean> {
     return await this.json_transport("check_email_validity", { email });
   }
+  public async get_system_info(): Promise<{ [key: string]: string }> {
+    return await this.json_transport("get_system_info", undefined);
+  }
   public async add_account(): Promise<number> {
     return await this.json_transport("add_account", undefined);
   }
@@ -62,6 +65,9 @@ export class RawApi {
   }
   public async get_selected_account_id(): Promise<number | null> {
     return await this.json_transport("get_selected_account_id", undefined);
+  }
+  public async sc_get_info(): Promise<{ [key: string]: string }> {
+    return await this.json_transport("sc_get_info", undefined);
   }
   public async sc_set_config(key: string, value: string | null): Promise<void> {
     return await this.json_transport("sc_set_config", { key, value });

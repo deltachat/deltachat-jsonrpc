@@ -114,8 +114,6 @@ impl Api {
 
 // root ---------------------------------------------------------------
 
-/// get general info, even if no context is selected 
-async fn get_info(&self) -> Result<String> {}
 async fn get_provider_info(&self, email:String) -> Option<ProviderInfo> {}
 
 // 'updateBlockedContacts' - omited because it is an special desktop function that triggers an event
@@ -126,7 +124,6 @@ async fn sc_set_profile_picture(&self, new_image: String) -> Result<()> {}
 // NEEDS_THE_BLOB_QUESTION_ANSWERED_EVENTUALLY
 // 'getProfilePicture' equals to `dc.getContact(C.DC_CONTACT_ID_SELF).getProfileImage()` or `dc.get_config("selfavatar")`
 
-async fn sc_get_info(&self) -> Result<String> {}
 async fn sc_join_secure_join(&self, qrCode: String) -> Result<u32> {}
 async fn sc_stop_ongoing_process(&self) -> Result<u32> {}
 async fn sc_check_qr_code(&self, qrCode: String) -> Result<QrCodeResponse> {}
