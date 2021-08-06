@@ -13,7 +13,7 @@ export class DeltaChat extends EventEmitter<
   private backend_connection: boolean = false;
 
   private callbacks: {
-    [invocation_id: number]: { res: Function; rej: Function };
+    [invocation_id: number]: { res: Function; rej: Function } | null;
   } = {};
   private invocation_id_counter = 1;
 
@@ -100,12 +100,10 @@ export class DeltaChat extends EventEmitter<
   private call(method: string, params?: any): Promise<any> {
     if (!this.backend_connection) throw new Error("Not connected to backend");
 
-    let callback: { res: Function; rej: Function };
-    const promise = new Promise((res, rej) => {
-      callback = { res, rej };
-    });
     const invocation_id = this.invocation_id_counter++;
-    this.callbacks[invocation_id] = callback;
+    const promise = new Promise((res, rej) => {
+      this.callbacks[invocation_id] = { res, rej };
+    });
 
     let data = {
       jsonrpc: "2.0",
