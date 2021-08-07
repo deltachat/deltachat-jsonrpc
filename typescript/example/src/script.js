@@ -103,7 +103,7 @@ async function getAccounts() {
         const nameOrAddr = account.display_name || account.addr;
         const codepoint = nameOrAddr && nameOrAddr.codePointAt(0);
         avatar = h(
-          "img",
+          "div",
           codepoint ? String.fromCodePoint(codepoint).toUpperCase() : "#",
           "avatar"
         );
