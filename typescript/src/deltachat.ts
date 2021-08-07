@@ -18,36 +18,56 @@ export class DeltaChat extends EventEmitter<
   private invocation_id_counter = 1;
 
   private socket: WebSocket;
+  private cleanupSocketListeners: (() => void) | null = null;
 
   constructor(public address: string) {
     super();
   }
 
-  async connect(): Promise<void> {
+ connect(): Promise<void> {
     return new Promise((res, rej) => {
+      if (this.socket) {
+        console.log("socket already exists - running cleanup first");
+        if (this.cleanupSocketListeners) {
+          this.cleanupSocketListeners();
+        }
+        this.socket.close(4000);
+      }
+
       console.log("connecting to", this.address);
       this.socket = new WebSocket(this.address);
       const self = this; // socket event callback overwrites this to undefined sometimes
 
-      this.socket.addEventListener("message", this.onMessage.bind(self));
-      this.socket.addEventListener("error", (event) => {
+      const onMessage = this.onMessage.bind(self);
+      const onError = (event: any) => {
         console.error(event);
         // TODO handle error
         self.backend_connection = false;
-        this.emit("socket_connection_change", false)
+        this.emit("socket_connection_change", false);
         rej("socket error");
-      });
-      this.socket.addEventListener("close", (event) => {
+      };
+      const onClose = (_event: any) => {
         console.debug("socket is closed now");
         self.backend_connection = false;
-        this.emit("socket_connection_change", false)
-      });
-      this.socket.addEventListener("open", (event) => {
+        this.emit("socket_connection_change", false);
+      };
+      const onOpen = (_event: any) => {
         console.debug("socket is open now");
         self.backend_connection = true;
-        this.emit("socket_connection_change", true)
+        this.emit("socket_connection_change", true);
         res();
-      });
+      };
+
+      this.socket.addEventListener("message", onMessage);
+      this.socket.addEventListener("error", onError);
+      this.socket.addEventListener("close", onClose);
+      this.socket.addEventListener("open", onOpen);
+      this.cleanupSocketListeners = () => {
+        this.socket.removeEventListener("message", onMessage);
+        this.socket.removeEventListener("error", onError);
+        this.socket.removeEventListener("close", onClose);
+        this.socket.removeEventListener("open", onOpen);
+      };
     });
   }
 
