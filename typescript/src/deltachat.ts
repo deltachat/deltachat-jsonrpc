@@ -21,7 +21,7 @@ export class DeltaChat extends EventEmitter<
   } = {};
   private invocation_id_counter = 1;
 
-  private socket: WebSocket;
+  private socket: WebSocket|null=null;
   private cleanupSocketListeners: (() => void) | null = null;
 
   constructor(public address: string) {
@@ -67,6 +67,7 @@ export class DeltaChat extends EventEmitter<
       this.socket.addEventListener("close", onClose);
       this.socket.addEventListener("open", onOpen);
       this.cleanupSocketListeners = () => {
+        if (!this.socket) {return}
         this.socket.removeEventListener("message", onMessage);
         this.socket.removeEventListener("error", onError);
         this.socket.removeEventListener("close", onClose);
@@ -139,6 +140,7 @@ export class DeltaChat extends EventEmitter<
     try {
       // make sure all errors are contained in the promise result
       console.debug("-->", data);
+      if(!this.socket) {throw Error("no socket!")}
       this.socket.send(JSON.stringify(data));
       return promise;
     } catch (error) {
