@@ -373,6 +373,11 @@ impl CommandApi {
 
     // TODO fn sc_send_message () -> {}
 
+    async fn sc_is_configured(&self) -> Result<bool> {
+        let sc = self.selected_context().await?;
+        Ok(sc.is_configured().await?)
+    }
+
     async fn sc_get_info(&self) -> Result<BTreeMap<&'static str, String>> {
         let sc = self.selected_context().await?;
         Ok(sc.get_info().await?)

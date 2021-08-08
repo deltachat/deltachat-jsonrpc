@@ -99,6 +99,7 @@ impl State {
 #[async_std::main]
 async fn main() -> Result<(), std::io::Error> {
     env_logger::init();
+    info!("Starting");
 
     // Setup Account Manager / start it
 

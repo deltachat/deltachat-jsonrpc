@@ -12,6 +12,10 @@ export class DeltaChat extends EventEmitter<
   raw_api: RawApi = new RawApi(this.call.bind(this));
   private backend_connection: boolean = false;
 
+  isConnectedToBackend (){
+    return this.backend_connection
+  }
+
   private callbacks: {
     [invocation_id: number]: { res: Function; rej: Function } | null;
   } = {};
