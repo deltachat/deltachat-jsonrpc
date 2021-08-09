@@ -23,5 +23,5 @@
     "@types/ws": "^7.2.4",
     "esbuild": "^0.12.16"
   },
-  "prettier":{}
+  "prettier": {}
 }

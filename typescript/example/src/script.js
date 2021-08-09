@@ -15,10 +15,15 @@ window["dc"] = dc;
 
 const resultDiv = document.getElementById("result");
 
-dc.on("INFO", console.info);
-dc.on("WARNING", console.warn);
-dc.on("ERROR", console.error);
-dc.on("ERROR_SELF_NOT_IN_GROUP", console.error);
+function logEvent(logFn) {
+  return (event) =>
+    logFn(`[AC ${event.contextId}]`, event.field1, event.field2);
+}
+
+dc.on("INFO", logEvent(console.info));
+dc.on("WARNING", logEvent(console.warn));
+dc.on("ERROR", logEvent(console.error));
+dc.on("ERROR_SELF_NOT_IN_GROUP", logEvent(console.error));
 dc.on("CONNECTIVITY_CHANGED", console.info.bind(null, "Connectivity Changed"));
 // possibly also log to webview in resultDiv
 

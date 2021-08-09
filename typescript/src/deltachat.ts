@@ -5,6 +5,13 @@ import { JSON_RPC_Error } from "./json_rpc_error";
 import { EventEmitter } from "eventemitter3";
 import { get_event_name_from_id } from "./events";
 
+export interface Event {
+  id: number;
+  contextId: number;
+  field1: string | number | null;
+  field2: string | number | null;
+}
+
 export class DeltaChat extends EventEmitter<
   ReturnType<typeof get_event_name_from_id> | "socket_connection_change",
   any
@@ -12,8 +19,8 @@ export class DeltaChat extends EventEmitter<
   raw_api: RawApi = new RawApi(this.call.bind(this));
   private backend_connection: boolean = false;
 
-  isConnectedToBackend (){
-    return this.backend_connection
+  isConnectedToBackend() {
+    return this.backend_connection;
   }
 
   private callbacks: {
@@ -21,14 +28,14 @@ export class DeltaChat extends EventEmitter<
   } = {};
   private invocation_id_counter = 1;
 
-  private socket: WebSocket|null=null;
+  private socket: WebSocket | null = null;
   private cleanupSocketListeners: (() => void) | null = null;
 
   constructor(public address: string) {
     super();
   }
 
- connect(): Promise<void> {
+  connect(): Promise<void> {
     return new Promise((res, rej) => {
       if (this.socket) {
         console.log("socket already exists - running cleanup first");
@@ -67,7 +74,9 @@ export class DeltaChat extends EventEmitter<
       this.socket.addEventListener("close", onClose);
       this.socket.addEventListener("open", onOpen);
       this.cleanupSocketListeners = () => {
-        if (!this.socket) {return}
+        if (!this.socket) {
+          return;
+        }
         this.socket.removeEventListener("message", onMessage);
         this.socket.removeEventListener("error", onError);
         this.socket.removeEventListener("close", onClose);
@@ -91,11 +100,7 @@ export class DeltaChat extends EventEmitter<
       if (!answer.params) {
         throw new Error("invalid event, data missing");
       }
-      this.emit(
-        get_event_name_from_id(answer.params.id),
-        answer.params.field1,
-        answer.params.field2
-      );
+      this.emit(get_event_name_from_id(answer.params.id), answer.params);
     } else {
       // handle command results
       if (!answer.id) {
@@ -140,7 +145,9 @@ export class DeltaChat extends EventEmitter<
     try {
       // make sure all errors are contained in the promise result
       console.debug("-->", data);
-      if(!this.socket) {throw Error("no socket!")}
+      if (!this.socket) {
+        throw Error("no socket!");
+      }
       this.socket.send(JSON.stringify(data));
       return promise;
     } catch (error) {

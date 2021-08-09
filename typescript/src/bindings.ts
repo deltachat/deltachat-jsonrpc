@@ -96,6 +96,9 @@ export class RawApi {
   public async sc_configure(): Promise<void> {
     return await this.json_transport("sc_configure", undefined);
   }
+  public async sc_stop_ongoing_process(): Promise<void> {
+    return await this.json_transport("sc_stop_ongoing_process", undefined);
+  }
   public async sc_get_chatlist_entries(
     list_flags: number,
     query_string: string | null,
