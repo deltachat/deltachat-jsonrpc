@@ -415,6 +415,13 @@ impl CommandApi {
         Ok(())
     }
 
+    /// Signal an ongoing process to stop.
+    async fn sc_stop_ongoing_process (&self) -> Result<()> {
+        let sc = self.selected_context().await?;
+        sc.stop_ongoing().await;
+        Ok(())
+    }
+
     // ---------------------------------------------
     //                  Chat List
     // ---------------------------------------------
