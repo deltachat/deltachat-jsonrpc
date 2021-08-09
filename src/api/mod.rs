@@ -457,9 +457,9 @@ impl CommandApi {
         // todo custom json deserializer for ChatListEntry?
         let sc = self.selected_context().await?;
         let mut result: HashMap<u32, ChatListItemFetchResult> = HashMap::new();
-        for (i, entry) in entries.iter().enumerate() {
+        for (_i, entry) in entries.iter().enumerate() {
             result.insert(
-                i.try_into().unwrap(),
+                entry.0,
                 match _get_chat_list_items_by_id(&sc, entry).await {
                     Ok(res) => res,
                     Err(err) => ChatListItemFetchResult::Error {
