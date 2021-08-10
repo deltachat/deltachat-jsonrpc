@@ -54,7 +54,7 @@ export type FullChat_Type = {
   color: string;
   fresh_message_counter: number;
   is_group: boolean;
-  is_deaddrop: boolean;
+  is_contact_request: boolean;
   is_device_chat: boolean;
   self_in_group: boolean;
   is_muted: boolean;
