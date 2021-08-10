@@ -196,6 +196,12 @@ export class RawApi {
       chat_id,
     });
   }
+  public async sc_accept_chat(chat_id: number): Promise<void> {
+    return await this.json_transport("sc_accept_chat", { chat_id });
+  }
+  public async sc_block_chat(chat_id: number): Promise<void> {
+    return await this.json_transport("sc_block_chat", { chat_id });
+  }
   public async sc_message_list_get_message_ids(
     chat_id: number,
     flags: number
@@ -221,5 +227,14 @@ export class RawApi {
     contact_id: number
   ): Promise<Contact_Type> {
     return await this.json_transport("sc_contacts_get_contact", { contact_id });
+  }
+  public async sc_misc_send_text_message(
+    text: string,
+    chat_id: number
+  ): Promise<number> {
+    return await this.json_transport("sc_misc_send_text_message", {
+      text,
+      chat_id,
+    });
   }
 }

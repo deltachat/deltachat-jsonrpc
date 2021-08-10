@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::{collections::HashMap, str::FromStr};
 
 use dc_cmd_derive::gen_command_api;
-use deltachat::chat::get_chat_msgs;
+use deltachat::chat::{get_chat_msgs};
 use deltachat::config::Config;
 use deltachat::constants::*;
 use deltachat::contact::Contact;
@@ -811,6 +811,16 @@ impl CommandApi {
         FullChat::from_dc_chat_id(chat_id, &sc).await
     }
 
+    async fn sc_accept_chat(&self, chat_id: u32) -> Result<()> {
+        let sc = self.selected_context().await?;
+        ChatId::new(chat_id).accept(&sc).await
+    }
+
+    async fn sc_block_chat(&self, chat_id: u32) -> Result<()> {
+        let sc = self.selected_context().await?;
+        ChatId::new(chat_id).block(&sc).await
+    }
+
     // ---------------------------------------------
     //                Message List
     // ---------------------------------------------
@@ -859,5 +869,22 @@ impl CommandApi {
             &sc,
         )
         .await
+    }
+
+
+    // ---------------------------------------------
+    //           misc prototyping functions
+    //       that might get removed later again
+    // ---------------------------------------------
+
+    /// Returns the messageid of the sent message
+    async fn sc_misc_send_text_message(&self, text:String, chat_id:u32) -> Result<u32> {
+        let sc = self.selected_context().await?;
+
+        let mut msg = Message::new(Viewtype::Text);
+        msg.set_text(Some(text));
+        
+        let message_id = deltachat::chat::send_msg(&sc, ChatId::new(chat_id), &mut msg).await?;
+        Ok(message_id.to_u32())
     }
 }
