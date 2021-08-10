@@ -1,13 +1,14 @@
 use std::collections::BTreeMap;
-use std::convert::TryInto;
 use std::{collections::HashMap, str::FromStr};
 
 use dc_cmd_derive::gen_command_api;
+use deltachat::chat::get_chat_msgs;
 use deltachat::config::Config;
 use deltachat::constants::*;
-use deltachat::contact::may_be_valid_addr;
 use deltachat::contact::Contact;
-use deltachat::context::get_info;
+use deltachat::contact::{may_be_valid_addr, VerifiedStatus};
+use deltachat::context::{get_info, Context};
+use deltachat::message::Message;
 use deltachat::provider::get_provider_info;
 use deltachat::{
     accounts::Accounts,
@@ -74,11 +75,344 @@ impl ReturnType for Account {
     custom_return_type!("Account_Type".to_owned());
 }
 
+#[derive(Serialize)]
+struct ContactObject {
+    address: String,
+    color: String,
+    auth_name: String,
+    status: String,
+    display_name: String,
+    id: u32,
+    name: String,
+    profile_image: Option<String>, //BLOBS
+    name_and_addr: String,
+    is_blocked: bool,
+    is_verified: bool,
+}
+
+impl ContactObject {
+    async fn from_dc_contact(
+        contact: deltachat::contact::Contact,
+        context: &Context,
+    ) -> Result<Self> {
+        Ok(ContactObject {
+            address: contact.get_addr().to_owned(),
+            color: color_int_to_hex_string(contact.get_color()),
+            auth_name: contact.get_authname().to_owned(),
+            status: contact.get_status().to_owned(),
+            display_name: contact.get_display_name().to_owned(),
+            id: contact.id,
+            name: contact.get_name().to_owned(),
+            profile_image: match contact.get_profile_image(context).await? {
+                Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
+                None => None,
+            }, //BLOBS
+            name_and_addr: contact.get_name_n_addr().to_owned(),
+            is_blocked: contact.is_blocked(),
+            is_verified: contact.is_verified(context).await == VerifiedStatus::BidirectVerified,
+        })
+    }
+}
+
+impl ReturnType for ContactObject {
+    custom_return_type!("Contact_Type".to_owned());
+
+    fn get_typescript_type() -> String {
+        r#"
+        {
+            address: string,
+            color: string,
+            auth_name: string,
+            status: string,
+            display_name: string,
+            id: number,
+            name: string,
+            profile_image: string,
+            name_and_addr: string,
+            is_blocked: boolean,
+            is_verified: boolean,
+        }
+        "#
+        .to_owned()
+    }
+
+    fn into_json_value(self) -> Value {
+        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
+    }
+}
+
+#[derive(Serialize)]
+struct FullChat {
+    id: u32,
+    name: String,
+    is_protected: bool,
+    profile_image: Option<String>, //BLOBS ?
+    archived: bool,
+    // subtitle  - will be moved to frontend because it uses translation functions
+    chat_type: u32,
+    is_unpromoted: bool,
+    is_self_talk: bool,
+    contacts: Vec<ContactObject>,
+    contact_ids: Vec<u32>,
+    color: String,
+    fresh_message_counter: usize,
+    // is_group - please check over chat.type in frontend instead
+    is_contact_request: bool,
+    is_device_chat: bool,
+    self_in_group: bool,
+    is_muted: bool,
+    ephemeral_timer: u32, //TODO look if there are more important properties in newer core versions
+}
+
+impl FullChat {
+    async fn from_dc_chat_id(chat_id: u32, context: &Context) -> Result<Self> {
+        let rust_chat_id = ChatId::new(chat_id);
+        let chat = Chat::load_from_db(&context, rust_chat_id).await?;
+
+        let contact_ids = get_chat_contacts(context, rust_chat_id).await?;
+
+        let mut contacts = Vec::new();
+
+        for contact_id in &contact_ids {
+            contacts.push(
+                ContactObject::from_dc_contact(
+                    Contact::load_from_db(context, *contact_id).await?,
+                    context,
+                )
+                .await?,
+            )
+        }
+
+        Ok(FullChat {
+            id: chat_id,
+            name: chat.name.clone(),
+            is_protected: chat.is_protected(),
+            profile_image: match chat.get_profile_image(context).await? {
+                Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
+                None => None,
+            }, //BLOBS ?
+            archived: chat.get_visibility() == deltachat::chat::ChatVisibility::Archived,
+            chat_type: chat.get_type().to_u32().unwrap(), // TODO get rid of this unwrap?
+            is_unpromoted: chat.is_unpromoted(),
+            is_self_talk: chat.is_self_talk(),
+            contacts,
+            contact_ids: contact_ids.clone(),
+            color: color_int_to_hex_string(chat.get_color(context).await?),
+            fresh_message_counter: rust_chat_id.get_fresh_msg_cnt(context).await?,
+            is_contact_request: chat.is_contact_request(),
+            is_device_chat: chat.is_device_talk(),
+            self_in_group: contact_ids.contains(&DC_CONTACT_ID_SELF),
+            is_muted: chat.is_muted(),
+            ephemeral_timer: rust_chat_id.get_ephemeral_timer(context).await?.to_u32(),
+        })
+    }
+}
+
+impl ReturnType for FullChat {
+    custom_return_type!("FullChat_Type".to_owned());
+
+    fn get_typescript_type() -> String {
+        r#"
+        {
+            id: number,
+            name: string,
+            is_protected: boolean,
+            profile_image: string,
+            archived: boolean,
+            chat_type: number,
+            is_unpromoted: boolean,
+            is_self_talk: boolean,
+            contacts: Contact_Type[],
+            contact_ids: number[],
+            color: string,
+            fresh_message_counter: number,
+            is_group: boolean,
+            is_deaddrop: boolean,
+            is_device_chat: boolean,
+            self_in_group: boolean,
+            is_muted: boolean,
+            ephemeral_timer: number, 
+        }
+        "#
+        .to_owned()
+    }
+
+    fn into_json_value(self) -> Value {
+        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
+    }
+}
+
+#[derive(Serialize)]
+struct MessageObject {
+    id: u32,
+    chat_id: u32,
+    from_id: u32,
+    quoted_text: Option<String>,
+    quoted_message_id: Option<u32>,
+    text: Option<String>,
+    has_location: bool,
+    has_html: bool,
+    view_type: u32,
+    state: u32,
+
+    timestamp: i64,
+    sort_timestamp: i64,
+    received_timestamp: i64,
+    has_deviating_timestamp: bool,
+
+    // summary - use/create another function if you need it
+    subject: String,
+    show_padlock: bool,
+    is_setupmessage: bool,
+    is_info: bool,
+    is_forwarded: bool,
+
+    duration: i32,
+    dimensions_height: i32,
+    dimensions_width: i32,
+
+    videochat_type: Option<u32>,
+    videochat_url: Option<String>,
+
+    override_sender_name: Option<String>,
+    sender: ContactObject,
+
+    setup_code_begin: Option<String>,
+
+    file: Option<String>,
+    file_mime: Option<String>,
+    file_bytes: u64,
+    file_name: Option<String>,
+}
+
+impl MessageObject {
+    async fn from_message_id(message_id: u32, context: &Context) -> Result<Self> {
+        let msg_id = MsgId::new(message_id);
+        let message = Message::load_from_db(context, msg_id).await?;
+
+        let quoted_message_id = message
+            .quoted_message(context)
+            .await?
+            .map(|m| m.get_id().to_u32());
+
+        let sender_contact = Contact::load_from_db(context, message.get_from_id()).await?;
+        let sender = ContactObject::from_dc_contact(sender_contact, context).await?;
+
+        Ok(MessageObject {
+            id: message_id,
+            chat_id: message.get_chat_id().to_u32(),
+            from_id: message.get_from_id(),
+            quoted_text: message.quoted_text(),
+            quoted_message_id,
+            text: message.get_text(),
+            has_location: message.has_location(),
+            has_html: message.has_html(),
+            view_type: message
+                .get_viewtype()
+                .to_u32()
+                .ok_or(anyhow!("viewtype conversion to number failed"))?,
+            state: message
+                .get_state()
+                .to_u32()
+                .ok_or(anyhow!("state conversion to number failed"))?,
+
+            timestamp: message.get_timestamp(),
+            sort_timestamp: message.get_sort_timestamp(),
+            received_timestamp: message.get_received_timestamp(),
+            has_deviating_timestamp: message.has_deviating_timestamp(),
+
+            subject: message.get_subject().to_owned(),
+            show_padlock: message.get_showpadlock(),
+            is_setupmessage: message.is_setupmessage(),
+            is_info: message.is_info(),
+            is_forwarded: message.is_forwarded(),
+
+            duration: message.get_duration(),
+            dimensions_height: message.get_height(),
+            dimensions_width: message.get_width(),
+
+            videochat_type: match message.get_videochat_type() {
+                Some(vct) => Some(
+                    vct.to_u32()
+                        .ok_or(anyhow!("state conversion to number failed"))?,
+                ),
+                None => None,
+            },
+            videochat_url: message.get_videochat_url(),
+
+            override_sender_name: message.get_override_sender_name(),
+            sender,
+
+            setup_code_begin: message.get_setupcodebegin(context).await,
+
+            file: match message.get_file(context) {
+                Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
+                None => None,
+            }, //BLOBS
+            file_mime: message.get_filemime(),
+            file_bytes: message.get_filebytes(context).await,
+            file_name: message.get_filename(),
+        })
+    }
+}
+
+impl ReturnType for MessageObject {
+    custom_return_type!("Message_Type".to_owned());
+
+    fn get_typescript_type() -> String {
+        r#"
+        {
+            id: number,
+            chat_id: number,
+            from_id: number,
+            quoted_text: string | null,
+            quoted_message_id: number | null,
+            text: string,
+            has_location: boolean,
+            has_html: boolean,
+            view_type: number,
+            state: number,
+
+            timestamp: number,
+            sort_timestamp: number,
+            received_timestamp: number,
+            has_deviating_timestamp: boolean,
+            
+            subject: string | null,
+            show_padlock: boolean,
+            is_setupmessage: boolean,
+            is_info: boolean,
+            is_forwarded: boolean,
+        
+            duration: number,
+            dimensions_height: number | null,
+            dimensions_width: number | null,
+        
+            videochat_type: number | null,
+            videochat_url: string | null,
+            override_sender_name: string | null,
+        
+            sender: Contact_Type,
+            setup_code_begin: string | null,
+        
+            file: string | null,
+            file_mime: string | null,
+            file_bytes: number | null,
+            file_name: string | null,
+        }
+        "#
+        .to_owned()
+    }
+
+    fn into_json_value(self) -> Value {
+        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
+    }
+}
 
 struct ProviderInfo {
     before_login_hint: String,
     overview_page: String,
-    status: u32 // in reality this is an enum, but for simlicity and because it gets converted into a number anyway, we use an u32 here. 
+    status: u32, // in reality this is an enum, but for simlicity and because it gets converted into a number anyway, we use an u32 here.
 }
 
 impl ReturnType for ProviderInfo {
@@ -96,7 +430,6 @@ impl ReturnType for ProviderInfo {
 
     custom_return_type!("ProviderInfo_Type".to_owned());
 }
-
 
 #[derive(Deserialize)]
 struct ChatListEntry(u32, u32);
@@ -285,22 +618,19 @@ impl CommandApi {
         return may_be_valid_addr(&email);
     }
 
-    /// get general info, even if no context is selected 
+    /// get general info, even if no context is selected
     async fn get_system_info(&self) -> BTreeMap<&'static str, String> {
         get_info()
     }
 
-    async fn get_provider_info(&self, email:String) -> Option<ProviderInfo> {
+    async fn get_provider_info(&self, email: String) -> Option<ProviderInfo> {
         let provider = get_provider_info(&email).await;
-        provider.map(|p| 
-            ProviderInfo {
-                before_login_hint: p.before_login_hint.to_owned(),
-                overview_page: p.overview_page.to_owned(),
-                status: p.status.to_u32().unwrap(),
-            }
-        )
+        provider.map(|p| ProviderInfo {
+            before_login_hint: p.before_login_hint.to_owned(),
+            overview_page: p.overview_page.to_owned(),
+            status: p.status.to_u32().unwrap(),
+        })
     }
-
 
     // ---------------------------------------------
     //
@@ -416,7 +746,7 @@ impl CommandApi {
     }
 
     /// Signal an ongoing process to stop.
-    async fn sc_stop_ongoing_process (&self) -> Result<()> {
+    async fn sc_stop_ongoing_process(&self) -> Result<()> {
         let sc = self.selected_context().await?;
         sc.stop_ongoing().await;
         Ok(())
@@ -470,5 +800,64 @@ impl CommandApi {
             );
         }
         Ok(result)
+    }
+
+    // ---------------------------------------------
+    //                    Chat
+    // ---------------------------------------------
+
+    async fn sc_chatlist_get_full_chat_by_id(&self, chat_id: u32) -> Result<FullChat> {
+        let sc = self.selected_context().await?;
+        FullChat::from_dc_chat_id(chat_id, &sc).await
+    }
+
+    // ---------------------------------------------
+    //                Message List
+    // ---------------------------------------------
+
+    async fn sc_message_list_get_message_ids(&self, chat_id: u32, flags: u32) -> Result<Vec<u32>> {
+        let sc = self.selected_context().await?;
+        let msg = get_chat_msgs(&sc, ChatId::new(chat_id), flags, None).await?;
+        Ok(msg
+            .iter()
+            .filter_map(|chat_item| match chat_item {
+                deltachat::chat::ChatItem::Message { msg_id } => Some(msg_id.to_u32()),
+                _ => None,
+            })
+            .collect())
+    }
+
+    async fn sc_message_get_message(&self, message_id: u32) -> Result<MessageObject> {
+        let sc = self.selected_context().await?;
+        MessageObject::from_message_id(message_id, &sc).await
+    }
+
+    async fn sc_message_get_messages(
+        &self,
+        message_ids: Vec<u32>,
+    ) -> Result<HashMap<u32, MessageObject>> {
+        let sc = self.selected_context().await?;
+        let mut messages: HashMap<u32, MessageObject> = HashMap::new();
+        for message_id in message_ids {
+            messages.insert(
+                message_id,
+                MessageObject::from_message_id(message_id, &sc).await?,
+            );
+        }
+        Ok(messages)
+    }
+
+    // ---------------------------------------------
+    //                   Contact
+    // ---------------------------------------------
+
+    async fn sc_contacts_get_contact(&self, contact_id: u32) -> Result<ContactObject> {
+        let sc = self.selected_context().await?;
+
+        ContactObject::from_dc_contact(
+            deltachat::contact::Contact::get_by_id(&sc, contact_id).await?,
+            &sc,
+        )
+        .await
     }
 }

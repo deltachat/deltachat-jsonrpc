@@ -40,6 +40,78 @@ export type ChatListItemFetchResult_Type =
     }
   | { type: "ArchiveLink" }
   | { type: "Error"; id: number; error: string };
+export type FullChat_Type = {
+  id: number;
+  name: string;
+  is_protected: boolean;
+  profile_image: string;
+  archived: boolean;
+  chat_type: number;
+  is_unpromoted: boolean;
+  is_self_talk: boolean;
+  contacts: Contact_Type[];
+  contact_ids: number[];
+  color: string;
+  fresh_message_counter: number;
+  is_group: boolean;
+  is_deaddrop: boolean;
+  is_device_chat: boolean;
+  self_in_group: boolean;
+  is_muted: boolean;
+  ephemeral_timer: number;
+};
+export type Message_Type = {
+  id: number;
+  chat_id: number;
+  from_id: number;
+  quoted_text: string | null;
+  quoted_message_id: number | null;
+  text: string;
+  has_location: boolean;
+  has_html: boolean;
+  view_type: number;
+  state: number;
+
+  timestamp: number;
+  sort_timestamp: number;
+  received_timestamp: number;
+  has_deviating_timestamp: boolean;
+
+  subject: string | null;
+  show_padlock: boolean;
+  is_setupmessage: boolean;
+  is_info: boolean;
+  is_forwarded: boolean;
+
+  duration: number;
+  dimensions_height: number | null;
+  dimensions_width: number | null;
+
+  videochat_type: number | null;
+  videochat_url: string | null;
+  override_sender_name: string | null;
+
+  sender: Contact_Type;
+  setup_code_begin: string | null;
+
+  file: string | null;
+  file_mime: string | null;
+  file_bytes: number | null;
+  file_name: string | null;
+};
+export type Contact_Type = {
+  address: string;
+  color: string;
+  auth_name: string;
+  status: string;
+  display_name: string;
+  id: number;
+  name: string;
+  profile_image: string;
+  name_and_addr: string;
+  is_blocked: boolean;
+  is_verified: boolean;
+};
 export class RawApi {
   /**
    * @param json_transport function that executes a jsonrpc call and throws an error if one occured
@@ -116,5 +188,38 @@ export class RawApi {
     return await this.json_transport("sc_get_chatlist_items_by_entries", {
       entries,
     });
+  }
+  public async sc_chatlist_get_full_chat_by_id(
+    chat_id: number
+  ): Promise<FullChat_Type> {
+    return await this.json_transport("sc_chatlist_get_full_chat_by_id", {
+      chat_id,
+    });
+  }
+  public async sc_message_list_get_message_ids(
+    chat_id: number,
+    flags: number
+  ): Promise<number[]> {
+    return await this.json_transport("sc_message_list_get_message_ids", {
+      chat_id,
+      flags,
+    });
+  }
+  public async sc_message_get_message(
+    message_id: number
+  ): Promise<Message_Type> {
+    return await this.json_transport("sc_message_get_message", { message_id });
+  }
+  public async sc_message_get_messages(
+    message_ids: number[]
+  ): Promise<{ [key: number]: Message_Type }> {
+    return await this.json_transport("sc_message_get_messages", {
+      message_ids,
+    });
+  }
+  public async sc_contacts_get_contact(
+    contact_id: number
+  ): Promise<Contact_Type> {
+    return await this.json_transport("sc_contacts_get_contact", { contact_id });
   }
 }

@@ -66,44 +66,6 @@ struct QrCodeResponse = {
   text1: String
 }
 
-struct Contact {
-    address: String
-    color: String
-    auth_name: String
-    status: String
-    display_name: String
-    id: u32
-    name: String
-    profile_image: String //BLOBS
-    name_and_addr: String
-    is_blocked: bool
-    is_verified: bool
-}
-
-struct FullChat {
-  id: u32
-  name: String
-  is_protected: bool
-  profile_image: String  //BLOBS
-  archived: bool
-  // subtitle will be moved to frontend because it uses translation functions
-  r#type: u32
-  is_unpromoted: bool
-  is_self_talk: bool
-  contacts: Vec<Contact>
-  contact_ids: Vec<u32>
-  color: String
-  fresh_message_counter: u32
-  is_group: bool
-  is_deaddrop: bool
-  is_device_chat: bool
-  self_in_group: bool
-  muted: bool
-  ephemeral_timer: u32
-  //TODO look if there are more important properties in newer core versions
-}
-
-
 impl Api {
 
 // root ---------------------------------------------------------------
@@ -163,8 +125,6 @@ async fn sc_backup_import(&self, file: String) -> Result<()> {} // will not retu
 // chatList.getSelectedChatId - will be removed from desktop
 // chatList.onChatModified - will be removed from desktop
 
-async fn sc_chatlist_get_full_chat_by_id(&self, chat_id:number) -> Result<FullChat>
-
 async fn sc_chatlist_get_general_fresh_message_counter(&self) -> Result<u32> // this method might be used for a favicon badge counter
 
 // contacts ------------------------------------------------------------
@@ -180,8 +140,6 @@ async fn sc_contacts_create_contact(&self, email: String, name: Option<String>) 
 
 /// Returns contact id of the created or existing DM chat with that contact
 async fn sc_contacts_create_chat_by_contact_id(&self, contact_id: u32) -> Result<u32> //do it without the side effects
-
-async fn sc_contacts_get_contact(&self, contact_id: u32) -> Result<Contact>
 
 async fn sc_contacts_get_contact_ids(&self, list_flags: u32, query: String) -> Result<Vec<u32>>
 
@@ -290,31 +248,13 @@ class DeltaRemote {
     fnName: 'messageList.sendMessage',
     chatId: number,
     params: sendMessageParams
-  ): Promise<
-    [
-      number,
-      (
-        | MessageType
-        | {
-            msg: null
-          }
-      )
-    ]
-  >
+  ): Promise<[number, MessageType | null]>
   call(
     fnName: 'messageList.sendSticker',
     chatId: number,
     stickerPath: string
   ): Promise<void>
   call(fnName: 'messageList.deleteMessage', id: number): Promise<void>
-  call(
-    fnName: 'messageList.getMessage',
-    msgId: number
-  ): Promise<{ msg: null } | MessageType>
-  call(
-    fnName: 'messageList.getMessages',
-    messageIds: number[]
-  ): Promise<{ [key: number]: MessageType | { msg: null } }>
   call(fnName: 'messageList.getMessageInfo', msgId: number): Promise<string>
   call(
     fnName: 'messageList.getDraft',
@@ -333,11 +273,6 @@ class DeltaRemote {
     fnName: 'messageList.messageIdToJson',
     id: number
   ): Promise<{ msg: null } | MessageType>
-  call(
-    fnName: 'messageList.getMessageIds',
-    chatid: number,
-    flags?: number
-  ): Promise<number[]>
   call(
     fnName: 'messageList.forwardMessage',
     msgId: number,
