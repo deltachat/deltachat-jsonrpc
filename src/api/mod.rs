@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::{collections::HashMap, str::FromStr};
 
 use dc_cmd_derive::gen_command_api;
-use deltachat::chat::{get_chat_msgs};
+use deltachat::chat::get_chat_msgs;
 use deltachat::config::Config;
 use deltachat::constants::*;
 use deltachat::contact::Contact;
@@ -73,6 +73,30 @@ impl ReturnType for Account {
     }
 
     custom_return_type!("Account_Type".to_owned());
+}
+
+impl Account {
+    async fn from_context(id: u32, ctx: &deltachat::context::Context) -> Result<Self> {
+        if ctx.is_configured().await? {
+            let display_name = ctx.get_config(Config::Displayname).await?;
+            let addr = ctx.get_config(Config::Addr).await?;
+            let profile_image = ctx.get_config(Config::Selfavatar).await?;
+            let color = color_int_to_hex_string(
+                Contact::get_by_id(&ctx, DC_CONTACT_ID_SELF)
+                    .await?
+                    .get_color(),
+            );
+            Ok(Account::Configured {
+                id,
+                display_name,
+                addr,
+                profile_image,
+                color,
+            })
+        } else {
+            Ok(Account::Unconfigured { id })
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -650,30 +674,24 @@ impl CommandApi {
         self.manager.get_all().await
     }
 
+    async fn get_account_info(&self, account_id: u32) -> Result<Account> {
+        let context_option = self.manager.get_account(account_id).await;
+        if let Some(ctx) = context_option {
+            Ok(Account::from_context(account_id, &ctx).await?)
+        } else {
+            Err(anyhow!(
+                "account with id {} doesn't exist anymore",
+                account_id
+            ))
+        }
+    }
+
     async fn get_all_accounts(&self) -> Result<Vec<Account>> {
         let mut accounts = Vec::new();
         for id in self.manager.get_all().await {
             let context_option = self.manager.get_account(id).await;
             if let Some(ctx) = context_option {
-                if ctx.is_configured().await? {
-                    let display_name = ctx.get_config(Config::Displayname).await?;
-                    let addr = ctx.get_config(Config::Addr).await?;
-                    let profile_image = ctx.get_config(Config::Selfavatar).await?;
-                    let color = color_int_to_hex_string(
-                        Contact::get_by_id(&ctx, DC_CONTACT_ID_SELF)
-                            .await?
-                            .get_color(),
-                    );
-                    accounts.push(Account::Configured {
-                        id,
-                        display_name,
-                        addr,
-                        profile_image,
-                        color,
-                    });
-                } else {
-                    accounts.push(Account::Unconfigured { id });
-                }
+                accounts.push(Account::from_context(id, &ctx).await?)
             } else {
                 println!("account with id {} doesn't exist anymore", id);
             }
@@ -871,19 +889,18 @@ impl CommandApi {
         .await
     }
 
-
     // ---------------------------------------------
     //           misc prototyping functions
     //       that might get removed later again
     // ---------------------------------------------
 
     /// Returns the messageid of the sent message
-    async fn sc_misc_send_text_message(&self, text:String, chat_id:u32) -> Result<u32> {
+    async fn sc_misc_send_text_message(&self, text: String, chat_id: u32) -> Result<u32> {
         let sc = self.selected_context().await?;
 
         let mut msg = Message::new(Viewtype::Text);
         msg.set_text(Some(text));
-        
+
         let message_id = deltachat::chat::send_msg(&sc, ChatId::new(chat_id), &mut msg).await?;
         Ok(message_id.to_u32())
     }

@@ -139,6 +139,9 @@ export class RawApi {
   public async get_all_account_ids(): Promise<number[]> {
     return await this.json_transport("get_all_account_ids", undefined);
   }
+  public async get_account_info(account_id: number): Promise<Account_Type> {
+    return await this.json_transport("get_account_info", { account_id });
+  }
   public async get_all_accounts(): Promise<Account_Type[]> {
     return await this.json_transport("get_all_accounts", undefined);
   }

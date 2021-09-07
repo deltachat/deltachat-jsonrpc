@@ -50,6 +50,8 @@
 
 replicate desktop api feature set:
 
+(this feaature set is based on desktop version `1.20`, needs to be updated in the future)
+
 ```rs
 
 
