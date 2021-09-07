@@ -1,0 +1,39 @@
+name: CMD API Test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+  
+  ts_bindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+      - name: npm ci
+        run: npm ci
+      - name: npm run generate_bindings
+        run: npm run generate_bindings
+      - name: npm run check_ts
+        run: npm run check_ts
+      - name: run integration tests
+        run: npm run test:integration
+      - run: npm run prettier:check

@@ -39,10 +39,10 @@
   - [X] rust test
   - [X] rust fmt
   - [X] rust clippy
-  - [ ] tsc check
-  - [ ] prettier
+  - [X] tsc check
+  - [X] prettier
   - [ ] mocha
-- [ ] scripts to check&fix prettier formatting
+- [X] scripts to check&fix prettier formatting
 
 
 

@@ -4,12 +4,15 @@
   "description": "",
   "main": "dist/deltachat.js",
   "scripts": {
-    "test": "npm run check_ts",
+    "test": "npm run check_ts && npm run test:integration && npm run prettier:check",
+    "test:integration": "echo todo",
     "build": "npm run generate_bindings && tsc",
     "check_ts": "tsc --noEmit",
     "generate_bindings": "cargo run --bin gen_ts > src/bindings.ts && prettier -w src/bindings.ts",
     "example:build": "esbuild example/src/script.js --bundle --target=es2015 --format=cjs > example/browser_example.js",
-    "example:run": "npm run build && npm run example:build && firefox --devtools example/browser-example.html"
+    "example:run": "npm run build && npm run example:build && firefox --devtools example/browser-example.html",
+    "prettier:check": "prettier --check \"**/*.{js,json,ts,tsx,json}\"",
+    "prettier:fix": "prettier --write \"**/*.{js,json,ts,tsx,json}\""
   },
   "author": "Delta Chat Developers (ML) <delta@codespeak.net>",
   "license": "MPL-2.0",
