@@ -757,9 +757,9 @@ impl CommandApi {
     /// set config for the credentials before calling this
     async fn sc_configure(&self) -> Result<()> {
         let sc = self.selected_context().await?;
-        self.manager.stop_io().await;
+        sc.stop_io().await;
         sc.configure().await?;
-        self.manager.start_io().await;
+        sc.start_io().await;
         Ok(())
     }
 
