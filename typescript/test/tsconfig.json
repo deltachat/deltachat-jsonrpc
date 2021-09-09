@@ -1,16 +1,15 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "target": "ES2016",
+    "rootDir": ".",
+    "outDir": "../test_dist",
+    "target": "es5",
     "module": "commonjs",
-    "declaration": true,
+    "declaration": false,
     "esModuleInterop": true,
     "noImplicitAny": true,
     "isolatedModules": true,
     "strictNullChecks": true,
     "strict": true
   },
-  "include": ["src/**/*.ts"],
-  "compileOnSave": false
+  "compileOnSave": true
 }

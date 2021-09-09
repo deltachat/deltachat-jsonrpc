@@ -22,6 +22,8 @@
 ## MVP
 
 - [ ] mocha integration test for ts api
+ - [ ] basic tests
+ - [ ] advanced / "online tests" (mailadm for burner accounts)
 - [ ] coverage for a majority of the API
 - [ ] Blobs served
 - [ ] Blob upload (for attachments, setting profile-picture, importing backup and so on)

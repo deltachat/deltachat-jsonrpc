@@ -30,22 +30,39 @@ export class DeltaChat extends EventEmitter<
 
   private socket: WebSocket | null = null;
   private cleanupSocketListeners: (() => void) | null = null;
+  logDebug: typeof console.debug = (...args: any) => {};
+  log: typeof console.log = (...args: any) => {};
+  logInfo: typeof console.info = (...args: any) => {};
 
-  constructor(public address: string) {
+  constructor(
+    public address: string,
+    logLevel: "debug" | "normal" | "silent" = "debug"
+  ) {
     super();
+
+    switch (logLevel) {
+      case "debug":
+        this.logDebug = console.debug;
+      case "normal":
+        this.log = console.log;
+        this.logInfo = console.info;
+        break;
+      default:
+        break;
+    }
   }
 
   connect(): Promise<void> {
     return new Promise((res, rej) => {
       if (this.socket) {
-        console.log("socket already exists - running cleanup first");
+        this.log("socket already exists - running cleanup first");
         if (this.cleanupSocketListeners) {
           this.cleanupSocketListeners();
         }
         this.socket.close(4000);
       }
 
-      console.log("connecting to", this.address);
+      this.log("connecting to", this.address);
       this.socket = new WebSocket(this.address);
       const self = this; // socket event callback overwrites this to undefined sometimes
 
@@ -58,12 +75,12 @@ export class DeltaChat extends EventEmitter<
         rej("socket error");
       };
       const onClose = (_event: any) => {
-        console.debug("socket is closed now");
+        this.logDebug("socket is closed now");
         self.backend_connection = false;
         this.emit("socket_connection_change", false);
       };
       const onOpen = (_event: any) => {
-        console.debug("socket is open now");
+        this.logDebug("socket is open now");
         self.backend_connection = true;
         this.emit("socket_connection_change", true);
         res();
@@ -95,7 +112,7 @@ export class DeltaChat extends EventEmitter<
       console.log("message recieved is not valid json:", event.data, error);
       return;
     }
-    console.debug("<--", answer);
+    this.logDebug("<--", answer);
     if (answer.method === "event") {
       if (!answer.params) {
         throw new Error("invalid event, data missing");
@@ -144,7 +161,7 @@ export class DeltaChat extends EventEmitter<
 
     try {
       // make sure all errors are contained in the promise result
-      console.debug("-->", data);
+      this.logDebug("-->", data);
       if (!this.socket) {
         throw Error("no socket!");
       }

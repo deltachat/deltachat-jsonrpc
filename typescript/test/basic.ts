@@ -1,0 +1,96 @@
+import { strictEqual } from "assert";
+import chai, { assert, expect } from "chai";
+
+import { DeltaChat } from "..";
+
+import {
+  CMD_API_Server_Handle,
+  CMD_API_SERVER_PORT,
+  startCMD_API_Server,
+} from "./test_base";
+
+describe("basic tests", () => {
+  let server_handle: CMD_API_Server_Handle;
+  const dc = new DeltaChat(
+    "ws://localhost:" + CMD_API_SERVER_PORT + "/api_ws",
+    "silent"
+  );
+
+  before(async () => {
+    server_handle = await startCMD_API_Server(CMD_API_SERVER_PORT);
+  });
+
+  after(async () => {
+    await server_handle.close();
+  });
+
+  it("connect", async () => {
+    await dc.connect();
+  });
+
+  it("check email", async () => {
+    const positive_test_cases = [
+      "email@example.com",
+      "36aa165ae3406424e0c61af17700f397cad3fe8ab83d682d0bddf3338a5dd52e@yggmail@yggmail",
+    ];
+    const negative_test_cases = ["email@", "example.com", "emai221"];
+
+    expect(
+      await Promise.all(
+        positive_test_cases.map((email) =>
+          dc.raw_api.check_email_validity(email)
+        )
+      )
+    ).to.not.contain(false);
+
+    expect(
+      await Promise.all(
+        negative_test_cases.map((email) =>
+          dc.raw_api.check_email_validity(email)
+        )
+      )
+    ).to.not.contain(true);
+  });
+
+  it("get provider info for example.com", async () => {
+    const info = await dc.raw_api.get_provider_info("example.com");
+    expect(info).to.be.not.null;
+    expect(info?.overview_page).to.equal(
+      "https://providers.delta.chat/example-com"
+    );
+    expect(info?.status).to.equal(3);
+  });
+
+  it("get provider info - domain and email should give same result", async () => {
+    const info_domain = await dc.raw_api.get_provider_info("example.com");
+    const info_email = await dc.raw_api.get_provider_info("hi@example.com");
+    expect(info_email).to.deep.equal(info_domain);
+  });
+
+  describe("account managment", () => {
+    it("should create account", async () => {
+      await dc.raw_api.add_account();
+      assert((await dc.raw_api.get_all_account_ids()).length === 1);
+    });
+
+    it("should remove the account again", async () => {
+      await dc.raw_api.remove_account(
+        (
+          await dc.raw_api.get_all_account_ids()
+        )[0]
+      );
+      assert((await dc.raw_api.get_all_account_ids()).length === 0);
+    });
+
+    it("should create multiple accounts", async () => {
+      await dc.raw_api.add_account();
+      await dc.raw_api.add_account();
+      await dc.raw_api.add_account();
+      await dc.raw_api.add_account();
+      assert((await dc.raw_api.get_all_account_ids()).length === 4);
+    });
+  });
+});
+
+describe("online tests", () => {
+});
