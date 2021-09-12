@@ -4,7 +4,8 @@ pub use api::events;
 
 #[cfg(test)]
 mod tests {
-    use super::api::CommandApi;
+    use super::api::{AccountsWrapper, CommandApi};
+    use async_std::sync::{Arc, RwLock};
     use deltachat::accounts::Accounts;
     use tempfile::TempDir;
 
@@ -16,9 +17,11 @@ mod tests {
         println!("tmp_dir: {:?}", tmp_dir);
 
         // PathBuf::from("./accounts")
-        let account_manager = Accounts::new("".to_string(), tmp_dir).await?;
+        let account_manager = AccountsWrapper {
+            inner: Arc::new(RwLock::new(Accounts::new("".to_string(), tmp_dir).await?)),
+        };
 
-        let cmd_api = CommandApi::new(&account_manager);
+        let cmd_api = CommandApi::new(account_manager.clone());
 
         let io = cmd_api.get_json_rpc_io();
 
