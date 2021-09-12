@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use anyhow::bail;
 use api::events::event_to_json_rpc_notification;
-use api::CommandApi;
+use api::{AccountsWrapper, CommandApi};
 
 use async_std::path::PathBuf;
 use async_std::sync::RwLock;
@@ -75,11 +75,12 @@ impl State {
             .unsubscribe_events(connection_id)
     }
 
-    pub(crate) async fn init_event_share(&self, manager: &Accounts) {
-        let mut em = manager.get_event_emitter().await;
+    pub(crate) async fn init_event_share(&self, manager: AccountsWrapper) {
+        let mut em = manager.read().await.get_event_emitter().await;
         let es = self.event_share.clone();
         task::spawn(async move {
-            while let event = em.recv().await {
+            loop {
+                let event = em.recv().await;
                 match event {
                     Ok(event) => {
                         if let Some(event) = event {
@@ -103,16 +104,20 @@ async fn main() -> Result<(), std::io::Error> {
 
     // Setup Account Manager / start it
 
-    let account_manager = Accounts::new("json_api".to_owned(), PathBuf::from("./accounts"))
-        .await
-        .unwrap();
+    let account_manager = AccountsWrapper {
+        inner: Arc::new(RwLock::new(
+            Accounts::new("json_api".to_owned(), PathBuf::from("./accounts"))
+                .await
+                .unwrap(),
+        )),
+    };
 
     let state = State {
-        cmd_api: CommandApi::new(&account_manager),
+        cmd_api: CommandApi::new(account_manager.clone()),
         event_share: Arc::new(RwLock::new(EventShare::new())),
     };
 
-    state.init_event_share(&account_manager).await;
+    state.init_event_share(account_manager.clone()).await;
 
     let mut app = tide::with_state(state);
 
@@ -157,7 +162,7 @@ async fn main() -> Result<(), std::io::Error> {
         },
     ));
 
-    account_manager.start_io().await;
+    account_manager.read().await.start_io().await;
 
     app.listen("127.0.0.1:8080").await?;
 

@@ -1,4 +1,6 @@
+use async_std::sync::{Arc, RwLock};
 use std::collections::BTreeMap;
+use std::ops::Deref;
 use std::{collections::HashMap, str::FromStr};
 
 use dc_cmd_derive::gen_command_api;
@@ -559,8 +561,8 @@ async fn _get_chat_list_items_by_id(
     let chat = Chat::load_from_db(&ctx, chat_id).await?;
     let summary = Chatlist::get_summary2(&ctx, chat_id, last_msgid, Some(&chat)).await?;
 
-    let summary_text1 = summary.get_text1().unwrap_or("").to_owned();
-    let summary_text2 = summary.get_text2().unwrap_or("").to_owned();
+    let summary_text1 = summary.prefix.map_or_else(String::new, |s| s.to_string());
+    let summary_text2 = summary.text.to_owned();
 
     let visibility = chat.get_visibility();
 
@@ -592,7 +594,7 @@ async fn _get_chat_list_items_by_id(
         last_updated,
         summary_text1,
         summary_text2,
-        summary_status: summary.get_state().to_u32().expect("impossible"), // idea and a function to transform the constant to strings? or return string enum
+        summary_status: summary.state.to_u32().expect("impossible"), // idea and a function to transform the constant to strings? or return string enum
         is_protected: chat.is_protected(),
         is_group: chat.get_type() == Chattype::Group,
         fresh_message_counter,
@@ -612,21 +614,38 @@ fn color_int_to_hex_string(color: u32) -> String {
 }
 
 #[derive(Clone, Debug)]
+pub struct AccountsWrapper {
+    pub inner: Arc<RwLock<Accounts>>,
+}
+
+impl Deref for AccountsWrapper {
+    type Target = RwLock<Accounts>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct CommandApi {
-    manager: Accounts,
+    manager: AccountsWrapper,
 }
 
 impl CommandApi {
-    pub fn new(am: &Accounts) -> Self {
-        CommandApi {
-            manager: am.clone(),
-        }
+    pub fn new(am: AccountsWrapper) -> Self {
+        CommandApi { manager: am }
     }
 
     async fn selected_context(&self) -> Result<deltachat::context::Context> {
-        let sc = self.manager.get_selected_account().await.ok_or_else(|| {
-            anyhow!("no account/context selected, select one with select_account")
-        })?;
+        let sc = self
+            .manager
+            .read()
+            .await
+            .get_selected_account()
+            .await
+            .ok_or_else(|| {
+                anyhow!("no account/context selected, select one with select_account")
+            })?;
         Ok(sc)
     }
 }
@@ -648,7 +667,7 @@ impl CommandApi {
     }
 
     async fn get_provider_info(&self, email: String) -> Option<ProviderInfo> {
-        let provider = get_provider_info(&email).await;
+        let provider = get_provider_info(&email, false).await;
         provider.map(|p| ProviderInfo {
             before_login_hint: p.before_login_hint.to_owned(),
             overview_page: p.overview_page.to_owned(),
@@ -663,19 +682,19 @@ impl CommandApi {
     // ---------------------------------------------
 
     async fn add_account(&self) -> Result<u32> {
-        self.manager.add_account().await
+        self.manager.write().await.add_account().await
     }
 
     async fn remove_account(&self, account_id: u32) -> Result<()> {
-        self.manager.remove_account(account_id).await
+        self.manager.write().await.remove_account(account_id).await
     }
 
     async fn get_all_account_ids(&self) -> Vec<u32> {
-        self.manager.get_all().await
+        self.manager.read().await.get_all().await
     }
 
     async fn get_account_info(&self, account_id: u32) -> Result<Account> {
-        let context_option = self.manager.get_account(account_id).await;
+        let context_option = self.manager.read().await.get_account(account_id).await;
         if let Some(ctx) = context_option {
             Ok(Account::from_context(account_id, &ctx).await?)
         } else {
@@ -688,8 +707,8 @@ impl CommandApi {
 
     async fn get_all_accounts(&self) -> Result<Vec<Account>> {
         let mut accounts = Vec::new();
-        for id in self.manager.get_all().await {
-            let context_option = self.manager.get_account(id).await;
+        for id in self.manager.read().await.get_all().await {
+            let context_option = self.manager.read().await.get_account(id).await;
             if let Some(ctx) = context_option {
                 accounts.push(Account::from_context(id, &ctx).await?)
             } else {
@@ -700,12 +719,12 @@ impl CommandApi {
     }
 
     async fn select_account(&self, id: u32) -> Result<()> {
-        self.manager.select_account(id).await
+        self.manager.write().await.select_account(id).await
     }
 
     async fn get_selected_account_id(&self) -> Option<u32> {
         // TODO use the simpler api when availible: https://github.com/deltachat/deltachat-core-rust/pull/2570
-        match self.manager.get_selected_account().await {
+        match self.manager.read().await.get_selected_account().await {
             Some(ctx) => Some(ctx.get_id()),
             None => None,
         }
