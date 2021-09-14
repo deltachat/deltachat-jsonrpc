@@ -8,7 +8,7 @@ Promise.prototype["log"] = function () {
   return this;
 };
 
-const dc = new DeltaChat("ws://localhost:8080/api_ws");
+const dc = new DeltaChat("ws://localhost:20808/api_ws");
 
 console.log({ dc });
 window["dc"] = dc;

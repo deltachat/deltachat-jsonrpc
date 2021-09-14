@@ -39,3 +39,27 @@ npm run example:run
 ```sh
 cross build --features=webserver --target armv7-linux-androideabi --release
 ```
+
+
+
+## Run the tests
+
+### Rust tests
+
+```
+cargo test --features=webserver 
+```
+
+### Typescript
+
+```
+cd typescript
+npm run test
+```
+
+
+For the online tests to run you need a test account token for a mailadm instance,
+you can use docker to spin up a local instance: https://github.com/deltachat/docker-mailadm
+
+> set the env var `DCC_NEW_TMP_EMAIL` to your mailadm token: example:
+`DCC_NEW_TMP_EMAIL=https://testrun.org/new_email?t=1h_195dksa6544`
