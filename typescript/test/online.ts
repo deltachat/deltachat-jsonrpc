@@ -4,14 +4,17 @@ import {
   CMD_API_Server_Handle,
   CMD_API_SERVER_PORT,
   createTempUser,
-  startCMD_API_Server
+  startCMD_API_Server,
 } from "./test_base";
 
 describe("online tests", function () {
   let server_handle: CMD_API_Server_Handle;
-  const dc = new DeltaChat("ws://localhost:" + CMD_API_SERVER_PORT + "/api_ws", 'silent');
-  let account = null as any as { email: string; password: string; };
-  let account2 = null as any as { email: string; password: string; };
+  const dc = new DeltaChat(
+    "ws://localhost:" + CMD_API_SERVER_PORT + "/api_ws",
+    "silent"
+  );
+  let account = null as any as { email: string; password: string };
+  let account2 = null as any as { email: string; password: string };
 
   before(async function () {
     server_handle = await startCMD_API_Server(CMD_API_SERVER_PORT);
@@ -38,8 +41,6 @@ describe("online tests", function () {
       );
       this.skip();
     }
-
-    
   });
 
   after(async () => {
@@ -51,7 +52,7 @@ describe("online tests", function () {
   });
 
   it("configure test accounts", async function () {
-    this.timeout(6000)
+    this.timeout(6000);
     await dc.raw_api.select_account(await dc.raw_api.add_account());
 
     await dc.raw_api.sc_set_config("addr", account.email);
@@ -62,13 +63,11 @@ describe("online tests", function () {
 
     await dc.raw_api.sc_set_config("addr", account2.email);
     await dc.raw_api.sc_set_config("mail_pw", account2.password);
-    await Promise.all([configure_promise,dc.raw_api.sc_configure()]);
-
-
+    await Promise.all([configure_promise, dc.raw_api.sc_configure()]);
   });
 
   it.skip("send and recieve text message", async function () {
-    this.timeout(6000)
+    this.timeout(6000);
     await dc.raw_api.select_account(1);
 
     // todo when we have functions to create contact and chat with that contact
