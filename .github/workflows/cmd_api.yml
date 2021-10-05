@@ -28,6 +28,12 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1.3.0
       - name: npm ci
         run: |
           cd typescript
@@ -43,6 +49,7 @@ jobs:
       - name: run integration tests
         run: |
           cd typescript
+          npm run build
           npm run test:integration
       - name: run prettier
         run: |
