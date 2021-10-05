@@ -135,7 +135,7 @@ impl ContactObject {
             }, //BLOBS
             name_and_addr: contact.get_name_n_addr().to_owned(),
             is_blocked: contact.is_blocked(),
-            is_verified: contact.is_verified(context).await == VerifiedStatus::BidirectVerified,
+            is_verified: contact.is_verified(context).await? == VerifiedStatus::BidirectVerified,
         })
     }
 }
