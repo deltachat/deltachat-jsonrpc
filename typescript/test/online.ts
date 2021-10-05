@@ -1,5 +1,6 @@
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import { DeltaChat } from "../dist/deltachat";
+import { Event_TypeID, get_event_name_from_id } from "../dist/events";
 import {
   CMD_API_Server_Handle,
   CMD_API_SERVER_PORT,
@@ -51,6 +52,8 @@ describe("online tests", function () {
     await dc.connect();
   });
 
+  let are_configured = false;
+
   it("configure test accounts", async function () {
     this.timeout(6000);
     await dc.raw_api.select_account(await dc.raw_api.add_account());
@@ -64,16 +67,107 @@ describe("online tests", function () {
     await dc.raw_api.sc_set_config("addr", account2.email);
     await dc.raw_api.sc_set_config("mail_pw", account2.password);
     await Promise.all([configure_promise, dc.raw_api.sc_configure()]);
+
+    are_configured = true;
   });
 
-  it.skip("send and recieve text message", async function () {
-    this.timeout(6000);
+  it("send and recieve text message", async function () {
+    if (!are_configured) {
+      this.skip();
+    }
+    this.timeout(5000);
+
     await dc.raw_api.select_account(1);
+    const contactId = await dc.raw_api.sc_contacts_create_contact(
+      account2.email,
+      null
+    );
+    const chatId = await dc.raw_api.sc_contacts_create_chat_by_contact_id(
+      contactId
+    );
+    dc.raw_api.sc_misc_send_text_message("Hello", chatId);
 
-    // todo when we have functions to create contact and chat with that contact
+    const { field1: chatIdOnAccountB } = await waitForEvent(
+      dc,
+      "INCOMING_MSG",
+      2
+    );
+
+    await dc.raw_api.select_account(2);
+    await dc.raw_api.sc_accept_chat(chatIdOnAccountB);
+    const messageList = await dc.raw_api.sc_message_list_get_message_ids(
+      chatIdOnAccountB,
+      0
+    );
+
+    expect(messageList).have.length(1);
+    const message = await dc.raw_api.sc_message_get_message(messageList[0]);
+    expect(message.text).equal("Hello");
   });
 
-  it("assert(true)", async () => {
-    assert(true);
+  it("send and recieve text message roundtrip, encrypted on answer onwards", async function () {
+    if (!are_configured) {
+      this.skip();
+    }
+    this.timeout(5000);
+
+    // send message from A to B
+    await dc.raw_api.select_account(1);
+    const contactId = await dc.raw_api.sc_contacts_create_contact(
+      account2.email,
+      null
+    );
+    const chatId = await dc.raw_api.sc_contacts_create_chat_by_contact_id(
+      contactId
+    );
+    dc.raw_api.sc_misc_send_text_message("Hello2", chatId);
+    // wait for message from A
+    const event = await waitForEvent(dc, "INCOMING_MSG", 2);
+    const { field1: chatIdOnAccountB } = event;
+
+    await dc.raw_api.select_account(2);
+    await dc.raw_api.sc_accept_chat(chatIdOnAccountB);
+    const messageList = await dc.raw_api.sc_message_list_get_message_ids(
+      chatIdOnAccountB,
+      0
+    );
+    const message = await dc.raw_api.sc_message_get_message(
+      messageList.reverse()[0]
+    );
+    expect(message.text).equal("Hello2");
+    // Send message back from B to A
+    dc.raw_api.sc_misc_send_text_message("super secret message", chatId);
+    // Check if answer arives at A and if it is encrypted
+    await waitForEvent(dc, "INCOMING_MSG", 1);
+    await dc.raw_api.select_account(1);
+    const messageId = (
+      await dc.raw_api.sc_message_list_get_message_ids(chatId, 0)
+    ).reverse()[0];
+    const message2 = await dc.raw_api.sc_message_get_message(messageId);
+    expect(message2.text).equal("super secret message");
+    expect(message2.show_padlock).equal(true);
   });
+
 });
+
+type event_data = {
+  contextId: number;
+  id: Event_TypeID;
+  [key: string]: any;
+};
+async function waitForEvent(
+  dc: DeltaChat,
+  event: ReturnType<typeof get_event_name_from_id>,
+  accountId: number
+): Promise<event_data> {
+  return new Promise((res, rej) => {
+    const callback = (ev: event_data) => {
+      if (ev.contextId == accountId) {
+        dc.removeListener(event, callback);
+        res(ev);
+      }
+    };
+
+    dc.on(event, callback);
+  });
+}
