@@ -23,9 +23,9 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v1.3.0
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --verbose --features webserver
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --verbose --features webserver
 
   ts_bindings:
     runs-on: ubuntu-latest
@@ -58,6 +58,7 @@ jobs:
         run: |
           cd typescript
           npm run build
+          cargo build --features webserver
           npm run test:integration
       - name: run prettier
         run: |
