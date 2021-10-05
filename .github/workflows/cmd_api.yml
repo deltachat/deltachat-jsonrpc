@@ -29,11 +29,21 @@ jobs:
         with:
           node-version: 14.x
       - name: npm ci
-        run: npm ci
+        run: |
+          cd typescript
+          npm ci
       - name: npm run generate_bindings
-        run: npm run generate_bindings
+        run: |
+          cd typescript
+          npm run generate_bindings
       - name: npm run check_ts
-        run: npm run check_ts
+        run: |
+          cd typescript
+          npm run check_ts
       - name: run integration tests
-        run: npm run test:integration
-      - run: npm run prettier:check
+        run: |
+          cd typescript
+          npm run test:integration
+      - run: |
+          cd typescript
+          npm run prettier:check
