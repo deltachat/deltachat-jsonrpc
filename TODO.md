@@ -12,7 +12,7 @@
 
 ## Pre - MVP
 
-- [WIP] Web socket server
+- [X] Web socket server
 - [WIP] Web socket client (ts)
   - [X] backend connection state changed events
   - [ ] Reconnect on connection loss / connection state
@@ -37,13 +37,13 @@
 - [ ] authenticated connection?
 - [ ] Look into unit-testing for the proc macros?
 - [ ] proc macro taking over doc comments to generated typescript file
-- [ ] GH action for tests (rust and typescript)
+- [X] GH action for tests (rust and typescript)
   - [X] rust test
   - [X] rust fmt
   - [X] rust clippy
   - [X] tsc check
   - [X] prettier
-  - [ ] mocha
+  - [X] mocha
 - [X] scripts to check&fix prettier formatting
 
 
@@ -52,7 +52,7 @@
 
 replicate desktop api feature set:
 
-(this feaature set is based on desktop version `1.20`, needs to be updated in the future)
+(this feature set is based on desktop version `1.20`, needs to be updated in the future)
 
 ```rs
 
