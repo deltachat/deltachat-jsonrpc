@@ -147,7 +147,6 @@ describe("online tests", function () {
     expect(message2.text).equal("super secret message");
     expect(message2.show_padlock).equal(true);
   });
-
 });
 
 type event_data = {
