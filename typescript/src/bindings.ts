@@ -231,6 +231,22 @@ export class RawApi {
   ): Promise<Contact_Type> {
     return await this.json_transport("sc_contacts_get_contact", { contact_id });
   }
+  public async sc_contacts_create_contact(
+    email: string,
+    name: string | null
+  ): Promise<number> {
+    return await this.json_transport("sc_contacts_create_contact", {
+      email,
+      name,
+    });
+  }
+  public async sc_contacts_create_chat_by_contact_id(
+    contact_id: number
+  ): Promise<number> {
+    return await this.json_transport("sc_contacts_create_chat_by_contact_id", {
+      contact_id,
+    });
+  }
   public async sc_misc_send_text_message(
     text: string,
     chat_id: number

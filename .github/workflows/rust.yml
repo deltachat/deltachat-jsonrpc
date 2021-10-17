@@ -20,6 +20,8 @@ jobs:
           profile: minimal
           toolchain: 1.50.0
           override: true
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1.3.0
       - run: rustup component add rustfmt
       - uses: actions-rs/cargo@v1
         with:
@@ -35,6 +37,8 @@ jobs:
           toolchain: 1.50.0
           components: clippy
           override: true
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1.3.0
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

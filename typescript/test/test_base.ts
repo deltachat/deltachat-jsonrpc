@@ -4,10 +4,10 @@ import { mkdtemp, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { spawn } from "child_process";
 import { unwrapPromise } from "./ts_helpers";
-
+import fetch from "node-fetch";
 /* port is not configurable yet */
 
-export const CMD_API_SERVER_PORT = 8080;
+export const CMD_API_SERVER_PORT = 20808;
 export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
   const tmp_dir = await mkdtemp(join(tmpdir(), "test_prefix"));
 
@@ -28,6 +28,8 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
     },
   });
 
+  //server.stderr.pipe(process.stderr)
+
   return {
     close: async () => {
       if (!server.kill(9)) {
@@ -41,3 +43,18 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
 export type CMD_API_Server_Handle = unwrapPromise<
   ReturnType<typeof startCMD_API_Server>
 >;
+
+export async function createTempUser(url: string) {
+  async function postData(url = "") {
+    // Default options are marked with *
+    const response = await fetch(url, {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      headers: {
+        "cache-control": "no-cache",
+      },
+    });
+    return response.json(); // parses JSON response into native JavaScript objects
+  }
+
+  return await postData(url);
+}

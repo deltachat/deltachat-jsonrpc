@@ -24,7 +24,7 @@ use deltachat::{
 
 use num_traits::cast::ToPrimitive;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use jsonrpc_core::serde_json::{json, Value};
 use serde::{Deserialize, Serialize};
 
@@ -135,7 +135,7 @@ impl ContactObject {
             }, //BLOBS
             name_and_addr: contact.get_name_n_addr().to_owned(),
             is_blocked: contact.is_blocked(),
-            is_verified: contact.is_verified(context).await == VerifiedStatus::BidirectVerified,
+            is_verified: contact.is_verified(context).await? == VerifiedStatus::BidirectVerified,
         })
     }
 }
@@ -906,6 +906,28 @@ impl CommandApi {
             &sc,
         )
         .await
+    }
+
+    /// Add a single contact as a result of an explicit user action.
+    ///
+    /// Returns contact id of the created or existing contact
+    async fn sc_contacts_create_contact(&self, email: String, name: Option<String>) -> Result<u32> {
+        let sc = self.selected_context().await?;
+        if !may_be_valid_addr(&email) {
+            bail!(anyhow!(
+                "provided email address is not a valid email address"
+            ))
+        }
+        Contact::create(&sc, &name.unwrap_or("".to_string()), &email).await
+    }
+
+    /// Returns contact id of the created or existing DM chat with that contact
+    async fn sc_contacts_create_chat_by_contact_id(&self, contact_id: u32) -> Result<u32> {
+        let sc = self.selected_context().await?;
+        let contact = Contact::get_by_id(&sc, contact_id).await?;
+        ChatId::create_for_contact(&sc, contact.id)
+            .await
+            .map(|id| id.to_u32())
     }
 
     // ---------------------------------------------

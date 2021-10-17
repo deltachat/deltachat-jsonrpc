@@ -18,6 +18,8 @@ describe("basic tests", () => {
 
   before(async () => {
     server_handle = await startCMD_API_Server(CMD_API_SERVER_PORT);
+    // make sure server is up by the time we continue
+    await new Promise((res) => setTimeout(res, 100));
   });
 
   after(async () => {
@@ -67,6 +69,16 @@ describe("basic tests", () => {
     expect(info_email).to.deep.equal(info_domain);
   });
 
+  it("system info", async () => {
+    const system_info = await dc.raw_api.get_system_info();
+    expect(system_info).to.contain.keys([
+      "arch",
+      "num_cpus",
+      "deltachat_core_version",
+      "sqlite_version",
+    ]);
+  });
+
   describe("account managment", () => {
     it("should create account", async () => {
       await dc.raw_api.add_account();
@@ -90,7 +102,4 @@ describe("basic tests", () => {
       assert((await dc.raw_api.get_all_account_ids()).length === 4);
     });
   });
-});
-
-describe("online tests", () => {
 });

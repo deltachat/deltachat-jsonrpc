@@ -12,7 +12,7 @@
 
 ## Pre - MVP
 
-- [WIP] Web socket server
+- [X] Web socket server
 - [WIP] Web socket client (ts)
   - [X] backend connection state changed events
   - [ ] Reconnect on connection loss / connection state
@@ -21,9 +21,9 @@
 
 ## MVP
 
-- [ ] mocha integration test for ts api
- - [ ] basic tests
- - [ ] advanced / "online tests" (mailadm for burner accounts)
+- [X] mocha integration test for ts api
+ - [X] basic tests
+ - [X] advanced / "online tests" (mailadm for burner accounts)
 - [ ] coverage for a majority of the API
 - [ ] Blobs served
 - [ ] Blob upload (for attachments, setting profile-picture, importing backup and so on)
@@ -37,13 +37,13 @@
 - [ ] authenticated connection?
 - [ ] Look into unit-testing for the proc macros?
 - [ ] proc macro taking over doc comments to generated typescript file
-- [ ] GH action for tests (rust and typescript)
+- [X] GH action for tests (rust and typescript)
   - [X] rust test
   - [X] rust fmt
   - [X] rust clippy
   - [X] tsc check
   - [X] prettier
-  - [ ] mocha
+  - [X] mocha
 - [X] scripts to check&fix prettier formatting
 
 
@@ -52,7 +52,7 @@
 
 replicate desktop api feature set:
 
-(this feaature set is based on desktop version `1.20`, needs to be updated in the future)
+(this feature set is based on desktop version `1.20`, needs to be updated in the future)
 
 ```rs
 
@@ -139,11 +139,6 @@ async fn sc_contacts_unblock(&self, contact_id: u32) -> Result<()>
 
 async fn sc_contacts_change_nickname(&self, contact_id: u32, new_name: String) -> Result<()>
 
-/// Returns contact id of the created or existing contact
-async fn sc_contacts_create_contact(&self, email: String, name: Option<String>) -> Result<u32>
-
-/// Returns contact id of the created or existing DM chat with that contact
-async fn sc_contacts_create_chat_by_contact_id(&self, contact_id: u32) -> Result<u32> //do it without the side effects
 
 async fn sc_contacts_get_contact_ids(&self, list_flags: u32, query: String) -> Result<Vec<u32>>
 
