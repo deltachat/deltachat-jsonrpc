@@ -247,6 +247,12 @@ export class RawApi {
       contact_id,
     });
   }
+  public async sc_contacts_block(contact_id: number): Promise<void> {
+    return await this.json_transport("sc_contacts_block", { contact_id });
+  }
+  public async sc_contacts_unblock(contact_id: number): Promise<void> {
+    return await this.json_transport("sc_contacts_unblock", { contact_id });
+  }
   public async sc_misc_send_text_message(
     text: string,
     chat_id: number

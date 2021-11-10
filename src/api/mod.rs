@@ -930,6 +930,15 @@ impl CommandApi {
             .map(|id| id.to_u32())
     }
 
+    async fn sc_contacts_block(&self, contact_id: u32) -> Result<()> {
+       let sc = self.selected_context().await?;
+       Contact::block(&sc, contact_id).await
+    }
+
+    async fn sc_contacts_unblock(&self, contact_id: u32) -> Result<()> {
+        let sc = self.selected_context().await?;
+       Contact::unblock(&sc, contact_id).await
+    }
     // ---------------------------------------------
     //           misc prototyping functions
     //       that might get removed later again

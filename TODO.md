@@ -133,10 +133,6 @@ async fn sc_chatlist_get_general_fresh_message_counter(&self) -> Result<u32> // 
 
 // contacts ------------------------------------------------------------
 
-async fn sc_contacts_block(&self, contact_id: u32) -> Result<()>
-
-async fn sc_contacts_unblock(&self, contact_id: u32) -> Result<()>
-
 async fn sc_contacts_change_nickname(&self, contact_id: u32, new_name: String) -> Result<()>
 
 

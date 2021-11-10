@@ -102,4 +102,25 @@ describe("basic tests", () => {
       assert((await dc.raw_api.get_all_account_ids()).length === 4);
     });
   });
+
+  describe("contact managment", function () {
+    // could this also be done in an offline test?
+    before(async () => {
+      await dc.raw_api.select_account(await dc.raw_api.add_account());
+    });
+    it("block and unblock contact", async function () {
+      const contactId = await dc.raw_api.sc_contacts_create_contact(
+        "example@delta.chat",
+        null
+      );
+      expect((await dc.raw_api.sc_contacts_get_contact(contactId)).is_blocked)
+        .to.be.false;
+      await dc.raw_api.sc_contacts_block(contactId);
+      expect((await dc.raw_api.sc_contacts_get_contact(contactId)).is_blocked)
+        .to.be.true;
+      await dc.raw_api.sc_contacts_unblock(contactId);
+      expect((await dc.raw_api.sc_contacts_get_contact(contactId)).is_blocked)
+        .to.be.false;
+    });
+  });
 });
