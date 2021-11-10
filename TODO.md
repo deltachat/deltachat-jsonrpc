@@ -136,13 +136,6 @@ async fn sc_chatlist_get_general_fresh_message_counter(&self) -> Result<u32> // 
 async fn sc_contacts_change_nickname(&self, contact_id: u32, new_name: String) -> Result<()>
 
 
-async fn sc_contacts_get_contact_ids(&self, list_flags: u32, query: String) -> Result<Vec<u32>>
-
-// formerly called getContacts2 in desktop
-async fn sc_contacts_get_contacts(&self, list_flags: u32, query: String) -> Result<Vec<Contact>>
-
-async fn sc_contacts_get_contacts_by_ids(&self, ids: Vec<u32>) -> Result<HashMap<u32, Contact>>
-
 // contacts.getChatIdByContactId - very similar to sc_contacts_create_chat_by_contact_id
 // contacts.getDMChatId -  very similar to sc_contacts_create_chat_by_contact_id
 

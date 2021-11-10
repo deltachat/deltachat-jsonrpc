@@ -253,6 +253,31 @@ export class RawApi {
   public async sc_contacts_unblock(contact_id: number): Promise<void> {
     return await this.json_transport("sc_contacts_unblock", { contact_id });
   }
+  public async sc_contacts_get_contact_ids(
+    list_flags: number,
+    query: string | null
+  ): Promise<number[]> {
+    return await this.json_transport("sc_contacts_get_contact_ids", {
+      list_flags,
+      query,
+    });
+  }
+  public async sc_contacts_get_contacts(
+    list_flags: number,
+    query: string | null
+  ): Promise<Contact_Type[]> {
+    return await this.json_transport("sc_contacts_get_contacts", {
+      list_flags,
+      query,
+    });
+  }
+  public async sc_contacts_get_contacts_by_ids(
+    ids: number[]
+  ): Promise<{ [key: number]: Contact_Type }> {
+    return await this.json_transport("sc_contacts_get_contacts_by_ids", {
+      ids,
+    });
+  }
   public async sc_misc_send_text_message(
     text: string,
     chat_id: number
