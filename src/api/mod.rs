@@ -930,6 +930,66 @@ impl CommandApi {
             .map(|id| id.to_u32())
     }
 
+    async fn sc_contacts_block(&self, contact_id: u32) -> Result<()> {
+        let sc = self.selected_context().await?;
+        Contact::block(&sc, contact_id).await
+    }
+
+    async fn sc_contacts_unblock(&self, contact_id: u32) -> Result<()> {
+        let sc = self.selected_context().await?;
+        Contact::unblock(&sc, contact_id).await
+    }
+
+    async fn sc_contacts_get_contact_ids(
+        &self,
+        list_flags: u32,
+        query: Option<String>,
+    ) -> Result<Vec<u32>> {
+        let sc = self.selected_context().await?;
+        Contact::get_all(&sc, list_flags, query).await
+    }
+
+    // formerly called getContacts2 in desktop
+    async fn sc_contacts_get_contacts(
+        &self,
+        list_flags: u32,
+        query: Option<String>,
+    ) -> Result<Vec<ContactObject>> {
+        let sc = self.selected_context().await?;
+        let contact_ids = Contact::get_all(&sc, list_flags, query).await?;
+        let mut contacts: Vec<ContactObject> = Vec::with_capacity(contact_ids.len());
+        for id in contact_ids {
+            contacts.push(
+                ContactObject::from_dc_contact(
+                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
+                    &sc,
+                )
+                .await?,
+            );
+        }
+        Ok(contacts)
+    }
+
+    async fn sc_contacts_get_contacts_by_ids(
+        &self,
+        ids: Vec<u32>,
+    ) -> Result<HashMap<u32, ContactObject>> {
+        let sc = self.selected_context().await?;
+
+        let mut contacts = HashMap::with_capacity(ids.len());
+        for id in ids {
+            contacts.insert(
+                id,
+                ContactObject::from_dc_contact(
+                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
+                    &sc,
+                )
+                .await?,
+            );
+        }
+        Ok(contacts)
+    }
+
     // ---------------------------------------------
     //           misc prototyping functions
     //       that might get removed later again
