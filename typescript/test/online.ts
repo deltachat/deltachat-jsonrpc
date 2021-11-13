@@ -21,6 +21,13 @@ describe("online tests", function () {
     server_handle = await startCMD_API_Server(CMD_API_SERVER_PORT);
 
     if (!process.env.DCC_NEW_TMP_EMAIL) {
+      if(process.env.COVERAGE && !process.env.COVERAGE_OFFLINE) {
+        console.error(
+          "CAN NOT RUN COVERAGE correctly: Missing DCC_NEW_TMP_EMAIL environment variable!\n\n",
+          "You can set COVERAGE_OFFLINE=1 to circumvent this check and skip the online tests, but those coverage results will be wrong, because some functions can only be tested in the online test"
+        );
+        process.exit(1)
+      }
       console.log(
         "Missing DCC_NEW_TMP_EMAIL environment variable!, skip intergration tests"
       );
