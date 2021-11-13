@@ -72,5 +72,3 @@ You can test coverage with `npm run coverage`, but you need to have `DCC_NEW_TMP
 
 Open `coverage/index.html` for a detailed report.
 `bindings.ts` is probably the most interesting file for coverage, because it describes the api functions.
-
-Maybe we could somehow get a list of the uncovered functions, that could be more useful for developers than just the lines that are not covered.

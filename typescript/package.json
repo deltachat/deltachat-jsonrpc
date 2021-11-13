@@ -7,7 +7,7 @@
   "scripts": {
     "test": "npm run check_ts && npm run test:integration && npm run prettier:check",
     "test:integration": "npx tsc -b test && mocha test_dist",
-    "coverage": "npx tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html mocha test_dist",
+    "coverage": "npx tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs",
     "build": "npm run generate_bindings && tsc",
     "check_ts": "tsc --noEmit",
     "generate_bindings": "cargo run --bin gen_ts > src/bindings.ts && prettier -w src/bindings.ts",
