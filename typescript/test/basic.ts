@@ -118,9 +118,11 @@ describe("basic tests", () => {
       await dc.raw_api.sc_contacts_block(contactId);
       expect((await dc.raw_api.sc_contacts_get_contact(contactId)).is_blocked)
         .to.be.true;
+      expect(await dc.raw_api.sc_contacts_get_blocked()).to.have.length(1);
       await dc.raw_api.sc_contacts_unblock(contactId);
       expect((await dc.raw_api.sc_contacts_get_contact(contactId)).is_blocked)
         .to.be.false;
+      expect(await dc.raw_api.sc_contacts_get_blocked()).to.have.length(0);
     });
   });
 });

@@ -74,8 +74,6 @@ impl Api {
 
 // root ---------------------------------------------------------------
 
-// 'updateBlockedContacts' - omited because it is an special desktop function that triggers an event
-
 // NEEDS_THE_BLOB_QUESTION_ANSWERED_EVENTUALLY
 async fn sc_set_profile_picture(&self, new_image: String) -> Result<()> {}
 

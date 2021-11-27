@@ -940,6 +940,22 @@ impl CommandApi {
         Contact::unblock(&sc, contact_id).await
     }
 
+    async fn sc_contacts_get_blocked(&self) -> Result<Vec<ContactObject>> {
+        let sc = self.selected_context().await?;
+        let blocked_ids = Contact::get_all_blocked(&sc).await?;
+        let mut contacts: Vec<ContactObject> = Vec::with_capacity(blocked_ids.len());
+        for id in blocked_ids {
+            contacts.push(
+                ContactObject::from_dc_contact(
+                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
+                    &sc,
+                )
+                .await?,
+            );
+        }
+        Ok(contacts)
+    }
+
     async fn sc_contacts_get_contact_ids(
         &self,
         list_flags: u32,

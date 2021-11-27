@@ -253,6 +253,9 @@ export class RawApi {
   public async sc_contacts_unblock(contact_id: number): Promise<void> {
     return await this.json_transport("sc_contacts_unblock", { contact_id });
   }
+  public async sc_contacts_get_blocked(): Promise<Contact_Type[]> {
+    return await this.json_transport("sc_contacts_get_blocked", undefined);
+  }
   public async sc_contacts_get_contact_ids(
     list_flags: number,
     query: string | null
