@@ -9,7 +9,8 @@
     "noImplicitAny": true,
     "isolatedModules": true,
     "strictNullChecks": true,
-    "strict": true
+    "strict": true,
+    "sourceMap": true
   },
   "include": ["src/**/*.ts"],
   "compileOnSave": false

@@ -63,3 +63,12 @@ you can use docker to spin up a local instance: https://github.com/deltachat/doc
 
 > set the env var `DCC_NEW_TMP_EMAIL` to your mailadm token: example:
 `DCC_NEW_TMP_EMAIL=https://testrun.org/new_email?t=1h_195dksa6544`
+
+#### Test Coverage
+
+You can test coverage with `npm run coverage`, but you need to have `DCC_NEW_TMP_EMAIL` set, otherwise the result will be useless because some functions can only be tested with the online tests.
+
+> If you are offline and want to see the coverage results anyway (even though they are NOT correct), you can bypass the error with `COVERAGE_OFFLINE=1 npm run coverage`
+
+Open `coverage/index.html` for a detailed report.
+`bindings.ts` is probably the most interesting file for coverage, because it describes the api functions.
