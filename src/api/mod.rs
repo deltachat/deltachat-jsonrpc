@@ -137,11 +137,7 @@ impl CommandApi {
     }
 
     async fn get_selected_account_id(&self) -> Option<u32> {
-        // TODO use the simpler api when availible: https://github.com/deltachat/deltachat-core-rust/pull/2570
-        match self.manager.read().await.get_selected_account().await {
-            Some(ctx) => Some(ctx.get_id()),
-            None => None,
-        }
+        self.manager.read().await.get_selected_account_id().await
     }
 
     // ---------------------------------------------
