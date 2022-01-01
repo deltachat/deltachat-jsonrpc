@@ -116,7 +116,7 @@ describe("online tests", function () {
     if (!are_configured) {
       this.skip();
     }
-    this.timeout(5000);
+    this.timeout(7000);
 
     // send message from A to B
     await dc.raw_api.select_account(1);
