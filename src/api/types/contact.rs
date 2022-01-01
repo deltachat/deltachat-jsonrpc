@@ -30,6 +30,12 @@ impl ContactObject {
         contact: deltachat::contact::Contact,
         context: &Context,
     ) -> Result<Self> {
+        let profile_image = match contact.get_profile_image(context).await? {
+            Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
+            None => None,
+        };
+        let is_verified = contact.is_verified(context).await? == VerifiedStatus::BidirectVerified;
+
         Ok(ContactObject {
             address: contact.get_addr().to_owned(),
             color: color_int_to_hex_string(contact.get_color()),
@@ -38,13 +44,10 @@ impl ContactObject {
             display_name: contact.get_display_name().to_owned(),
             id: contact.id,
             name: contact.get_name().to_owned(),
-            profile_image: match contact.get_profile_image(context).await? {
-                Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
-                None => None,
-            }, //BLOBS
+            profile_image, //BLOBS
             name_and_addr: contact.get_name_n_addr().to_owned(),
             is_blocked: contact.is_blocked(),
-            is_verified: contact.is_verified(context).await? == VerifiedStatus::BidirectVerified,
+            is_verified,
         })
     }
 }

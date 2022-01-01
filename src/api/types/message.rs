@@ -68,6 +68,8 @@ impl MessageObject {
 
         let sender_contact = Contact::load_from_db(context, message.get_from_id()).await?;
         let sender = ContactObject::from_dc_contact(sender_contact, context).await?;
+        let file_bytes = message.get_filebytes(context).await;
+        let override_sender_name = message.get_override_sender_name();
 
         Ok(MessageObject {
             id: message_id,
@@ -81,11 +83,11 @@ impl MessageObject {
             view_type: message
                 .get_viewtype()
                 .to_u32()
-                .ok_or(anyhow!("viewtype conversion to number failed"))?,
+                .ok_or_else(|| anyhow!("viewtype conversion to number failed"))?,
             state: message
                 .get_state()
                 .to_u32()
-                .ok_or(anyhow!("state conversion to number failed"))?,
+                .ok_or_else(|| anyhow!("state conversion to number failed"))?,
 
             timestamp: message.get_timestamp(),
             sort_timestamp: message.get_sort_timestamp(),
@@ -105,13 +107,13 @@ impl MessageObject {
             videochat_type: match message.get_videochat_type() {
                 Some(vct) => Some(
                     vct.to_u32()
-                        .ok_or(anyhow!("state conversion to number failed"))?,
+                        .ok_or_else(|| anyhow!("state conversion to number failed"))?,
                 ),
                 None => None,
             },
             videochat_url: message.get_videochat_url(),
 
-            override_sender_name: message.get_override_sender_name(),
+            override_sender_name,
             sender,
 
             setup_code_begin: message.get_setupcodebegin(context).await,
@@ -121,7 +123,7 @@ impl MessageObject {
                 None => None,
             }, //BLOBS
             file_mime: message.get_filemime(),
-            file_bytes: message.get_filebytes(context).await,
+            file_bytes,
             file_name: message.get_filename(),
         })
     }

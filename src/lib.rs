@@ -21,7 +21,7 @@ mod tests {
             inner: Arc::new(RwLock::new(Accounts::new("".to_string(), tmp_dir).await?)),
         };
 
-        let cmd_api = CommandApi::new(account_manager.clone());
+        let cmd_api = CommandApi::new(account_manager);
 
         let io = cmd_api.get_json_rpc_io();
 

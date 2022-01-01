@@ -24,13 +24,13 @@ pub mod types;
 
 use crate::api::types::chat_list::{ChatListItemFetchResult, _get_chat_list_items_by_id};
 
-use types::contact::ContactObject;
-use types::message::MessageObject;
-use types::return_type::*;
 use types::account::Account;
 use types::chat::FullChat;
 use types::chat_list::ChatListEntry;
+use types::contact::ContactObject;
+use types::message::MessageObject;
 use types::provider_info::ProviderInfo;
+use types::return_type::*;
 
 #[derive(Clone, Debug)]
 pub struct AccountsWrapper {
@@ -328,7 +328,7 @@ impl CommandApi {
                 "provided email address is not a valid email address"
             ))
         }
-        Contact::create(&sc, &name.unwrap_or("".to_string()), &email).await
+        Contact::create(&sc, &name.unwrap_or_default(), &email).await
     }
 
     /// Returns contact id of the created or existing DM chat with that contact

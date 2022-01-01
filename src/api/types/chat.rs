@@ -6,7 +6,7 @@ use deltachat::context::Context;
 
 use num_traits::cast::ToPrimitive;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use jsonrpc_core::serde_json::Value;
 use serde::Serialize;
 
@@ -57,27 +57,36 @@ impl FullChat {
             )
         }
 
+        let profile_image = match chat.get_profile_image(context).await? {
+            Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
+            None => None,
+        };
+
+        let color = color_int_to_hex_string(chat.get_color(context).await?);
+        let fresh_message_counter = rust_chat_id.get_fresh_msg_cnt(context).await?;
+        let ephemeral_timer = rust_chat_id.get_ephemeral_timer(context).await?.to_u32();
+
         Ok(FullChat {
             id: chat_id,
             name: chat.name.clone(),
             is_protected: chat.is_protected(),
-            profile_image: match chat.get_profile_image(context).await? {
-                Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
-                None => None,
-            }, //BLOBS ?
+            profile_image, //BLOBS ?
             archived: chat.get_visibility() == deltachat::chat::ChatVisibility::Archived,
-            chat_type: chat.get_type().to_u32().unwrap(), // TODO get rid of this unwrap?
+            chat_type: chat
+                .get_type()
+                .to_u32()
+                .ok_or_else(|| anyhow!("unknown chat type id"))?, // TODO get rid of this unwrap?
             is_unpromoted: chat.is_unpromoted(),
             is_self_talk: chat.is_self_talk(),
             contacts,
             contact_ids: contact_ids.clone(),
-            color: color_int_to_hex_string(chat.get_color(context).await?),
-            fresh_message_counter: rust_chat_id.get_fresh_msg_cnt(context).await?,
+            color,
+            fresh_message_counter,
             is_contact_request: chat.is_contact_request(),
             is_device_chat: chat.is_device_talk(),
             self_in_group: contact_ids.contains(&DC_CONTACT_ID_SELF),
             is_muted: chat.is_muted(),
-            ephemeral_timer: rust_chat_id.get_ephemeral_timer(context).await?.to_u32(),
+            ephemeral_timer,
         })
     }
 }
