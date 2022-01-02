@@ -7,13 +7,13 @@ use num_traits::cast::ToPrimitive;
 use anyhow::{anyhow, Result};
 use jsonrpc_core::serde_json::Value;
 use serde::Serialize;
-
-use crate::custom_return_type;
+use ts_rs::TS;
 
 use super::contact::ContactObject;
 use super::return_type::*;
 
-#[derive(Serialize)]
+#[derive(Serialize, TS)]
+#[serde(rename = "Message")]
 pub struct MessageObject {
     id: u32,
     chat_id: u32,
@@ -54,6 +54,10 @@ pub struct MessageObject {
     file_mime: Option<String>,
     file_bytes: u64,
     file_name: Option<String>,
+}
+
+impl ReturnType for MessageObject {
+    crate::ts_rs_return_type!();
 }
 
 impl MessageObject {
@@ -126,58 +130,5 @@ impl MessageObject {
             file_bytes,
             file_name: message.get_filename(),
         })
-    }
-}
-
-impl ReturnType for MessageObject {
-    custom_return_type!("Message_Type".to_owned());
-
-    fn get_typescript_type() -> String {
-        r#"
-        {
-            id: number,
-            chat_id: number,
-            from_id: number,
-            quoted_text: string | null,
-            quoted_message_id: number | null,
-            text: string,
-            has_location: boolean,
-            has_html: boolean,
-            view_type: number,
-            state: number,
-
-            timestamp: number,
-            sort_timestamp: number,
-            received_timestamp: number,
-            has_deviating_timestamp: boolean,
-            
-            subject: string | null,
-            show_padlock: boolean,
-            is_setupmessage: boolean,
-            is_info: boolean,
-            is_forwarded: boolean,
-        
-            duration: number,
-            dimensions_height: number | null,
-            dimensions_width: number | null,
-        
-            videochat_type: number | null,
-            videochat_url: string | null,
-            override_sender_name: string | null,
-        
-            sender: Contact_Type,
-            setup_code_begin: string | null,
-        
-            file: string | null,
-            file_mime: string | null,
-            file_bytes: number | null,
-            file_name: string | null,
-        }
-        "#
-        .to_owned()
-    }
-
-    fn into_json_value(self) -> Value {
-        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
     }
 }

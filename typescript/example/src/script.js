@@ -99,7 +99,7 @@ async function getAccounts() {
     selectAccountButton.onclick = selectAccount.bind(null, account.id);
     const removeAccountButton = h("button", "remove");
     removeAccountButton.onclick = removeAccount.bind(null, account.id);
-    if (account.type == "configured") {
+    if (account.type == "Configured") {
       let avatar;
       if (account.display_name) {
         avatar = h("img", null, "avatar");

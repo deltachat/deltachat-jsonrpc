@@ -4,13 +4,12 @@ use deltachat::context::Context;
 use anyhow::Result;
 use jsonrpc_core::serde_json::Value;
 
-use serde::Serialize;
-
-use crate::custom_return_type;
-
 use super::{color_int_to_hex_string, return_type::*};
+use serde::Serialize;
+use ts_rs::TS;
 
-#[derive(Serialize)]
+#[derive(Serialize, TS)]
+#[serde(rename = "Contact")]
 pub struct ContactObject {
     address: String,
     color: String,
@@ -19,10 +18,14 @@ pub struct ContactObject {
     display_name: String,
     id: u32,
     name: String,
-    profile_image: Option<String>, //BLOBS
+    profile_image: Option<String>, // BLOBS
     name_and_addr: String,
     is_blocked: bool,
     is_verified: bool,
+}
+
+impl ReturnType for ContactObject {
+    crate::ts_rs_return_type!();
 }
 
 impl ContactObject {
@@ -49,32 +52,5 @@ impl ContactObject {
             is_blocked: contact.is_blocked(),
             is_verified,
         })
-    }
-}
-
-impl ReturnType for ContactObject {
-    custom_return_type!("Contact_Type".to_owned());
-
-    fn get_typescript_type() -> String {
-        r#"
-        {
-            address: string,
-            color: string,
-            auth_name: string,
-            status: string,
-            display_name: string,
-            id: number,
-            name: string,
-            profile_image: string,
-            name_and_addr: string,
-            is_blocked: boolean,
-            is_verified: boolean,
-        }
-        "#
-        .to_owned()
-    }
-
-    fn into_json_value(self) -> Value {
-        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
     }
 }
