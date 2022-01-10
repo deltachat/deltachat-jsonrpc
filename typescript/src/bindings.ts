@@ -167,6 +167,21 @@ export class RawApi {
   public async sc_stop_ongoing_process(): Promise<void> {
     return await this.json_transport("sc_stop_ongoing_process", undefined);
   }
+  public async sc_autocrypt_initiate_key_transfer(): Promise<string> {
+    return await this.json_transport(
+      "sc_autocrypt_initiate_key_transfer",
+      undefined
+    );
+  }
+  public async sc_autocrypt_continue_key_transfer(
+    message_id: number,
+    setup_code: string
+  ): Promise<void> {
+    return await this.json_transport("sc_autocrypt_continue_key_transfer", {
+      message_id,
+      setup_code,
+    });
+  }
   public async sc_get_chatlist_entries(
     list_flags: number,
     query_string: string | null,
