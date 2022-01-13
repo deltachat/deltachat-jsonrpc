@@ -50,6 +50,29 @@ macro_rules! custom_return_type {
     };
 }
 
+#[macro_export]
+macro_rules! ts_rs_return_type {
+    () => {
+        fn get_typescript_type() -> String {
+            Self::inline()
+        }
+
+        fn into_json_value(self) -> Value {
+            jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here? (the json! macro has it too)
+        }
+
+        fn makes_use_of_custom_ts_type() -> bool {
+            true
+        }
+
+        fn get_typescript_type_with_custom_type_support() -> String {
+            Self::name()
+        }
+
+        const IS_WRAPPER: bool = false;
+    };
+}
+
 impl ReturnType for () {
     fn get_typescript_type() -> String {
         "undefined".to_owned()

@@ -3,13 +3,18 @@ use deltachat::constants::*;
 use deltachat::contact::Contact;
 
 use anyhow::Result;
-use jsonrpc_core::serde_json::{json, Value};
+use jsonrpc_core::serde_json::Value;
 
 use super::color_int_to_hex_string;
 use super::return_type::*;
-use crate::custom_return_type;
 
+use serde::Serialize;
+use ts_rs::TS;
+
+#[derive(Serialize, TS)]
+#[serde(tag = "type")]
 pub enum Account {
+    //#[serde(rename_all = "camelCase")]
     Configured {
         id: u32,
         display_name: Option<String>,
@@ -24,31 +29,7 @@ pub enum Account {
 }
 
 impl ReturnType for Account {
-    fn get_typescript_type() -> String {
-        "{ id: number, type: \"unconfigured\" } | { id: number, type: \"configured\", display_name: string | null, addr: string | null, profile_image: string | null, color: string }".to_owned()
-    }
-
-    fn into_json_value(self) -> Value {
-        match self {
-            Account::Unconfigured { id } => json!({ "id": id, "type": "unconfigured" }),
-            Account::Configured {
-                id,
-                display_name,
-                addr,
-                profile_image,
-                color,
-            } => json!({
-               "id": id,
-               "type": "configured",
-               "display_name": display_name,
-               "addr": addr,
-               "profile_image": profile_image,
-               "color": color
-            }),
-        }
-    }
-
-    custom_return_type!("Account_Type".to_owned());
+    crate::ts_rs_return_type!();
 }
 
 impl Account {

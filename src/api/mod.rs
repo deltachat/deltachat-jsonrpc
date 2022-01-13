@@ -1,4 +1,5 @@
 use async_std::sync::{Arc, RwLock};
+use deltachat::message::MsgId;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::{collections::HashMap, str::FromStr};
@@ -197,6 +198,24 @@ impl CommandApi {
         let sc = self.selected_context().await?;
         sc.stop_ongoing().await;
         Ok(())
+    }
+
+    // ---------------------------------------------
+    //                  autocrypt
+    // ---------------------------------------------
+
+    async fn sc_autocrypt_initiate_key_transfer(&self) -> Result<String> {
+        let sc = self.selected_context().await?;
+        deltachat::imex::initiate_key_transfer(&sc).await
+    }
+
+    async fn sc_autocrypt_continue_key_transfer(
+        &self,
+        message_id: u32,
+        setup_code: String,
+    ) -> Result<()> {
+        let sc = self.selected_context().await?;
+        deltachat::imex::continue_key_transfer(&sc, MsgId::new(message_id), &setup_code).await
     }
 
     // ---------------------------------------------

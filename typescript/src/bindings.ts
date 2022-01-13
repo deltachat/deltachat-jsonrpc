@@ -4,17 +4,17 @@ export type ProviderInfo_Type = {
   overview_page: string;
   status: 1 | 2 | 3;
 };
-export type Account_Type =
-  | { id: number; type: "unconfigured" }
+export type Account =
   | {
+      type: "Configured";
       id: number;
-      type: "configured";
       display_name: string | null;
       addr: string | null;
       profile_image: string | null;
       color: string;
-    };
-export type ChatListEntry_Type = [number, number];
+    }
+  | { type: "Unconfigured"; id: number };
+export type ChatListEntry = [number, number];
 export type ChatListItemFetchResult_Type =
   | {
       type: "ChatListItem";
@@ -40,66 +40,59 @@ export type ChatListItemFetchResult_Type =
     }
   | { type: "ArchiveLink" }
   | { type: "Error"; id: number; error: string };
-export type FullChat_Type = {
+export type FullChat = {
   id: number;
   name: string;
   is_protected: boolean;
-  profile_image: string;
+  profile_image: string | null;
   archived: boolean;
   chat_type: number;
   is_unpromoted: boolean;
   is_self_talk: boolean;
-  contacts: Contact_Type[];
-  contact_ids: number[];
+  contacts: Array<Contact>;
+  contact_ids: Array<number>;
   color: string;
   fresh_message_counter: number;
-  is_group: boolean;
   is_contact_request: boolean;
   is_device_chat: boolean;
   self_in_group: boolean;
   is_muted: boolean;
   ephemeral_timer: number;
 };
-export type Message_Type = {
+export type Message = {
   id: number;
   chat_id: number;
   from_id: number;
   quoted_text: string | null;
   quoted_message_id: number | null;
-  text: string;
+  text: string | null;
   has_location: boolean;
   has_html: boolean;
   view_type: number;
   state: number;
-
-  timestamp: number;
-  sort_timestamp: number;
-  received_timestamp: number;
+  timestamp: bigint;
+  sort_timestamp: bigint;
+  received_timestamp: bigint;
   has_deviating_timestamp: boolean;
-
-  subject: string | null;
+  subject: string;
   show_padlock: boolean;
   is_setupmessage: boolean;
   is_info: boolean;
   is_forwarded: boolean;
-
   duration: number;
-  dimensions_height: number | null;
-  dimensions_width: number | null;
-
+  dimensions_height: number;
+  dimensions_width: number;
   videochat_type: number | null;
   videochat_url: string | null;
   override_sender_name: string | null;
-
-  sender: Contact_Type;
+  sender: Contact;
   setup_code_begin: string | null;
-
   file: string | null;
   file_mime: string | null;
-  file_bytes: number | null;
+  file_bytes: bigint;
   file_name: string | null;
 };
-export type Contact_Type = {
+export type Contact = {
   address: string;
   color: string;
   auth_name: string;
@@ -107,7 +100,7 @@ export type Contact_Type = {
   display_name: string;
   id: number;
   name: string;
-  profile_image: string;
+  profile_image: string | null;
   name_and_addr: string;
   is_blocked: boolean;
   is_verified: boolean;
@@ -139,10 +132,10 @@ export class RawApi {
   public async get_all_account_ids(): Promise<number[]> {
     return await this.json_transport("get_all_account_ids", undefined);
   }
-  public async get_account_info(account_id: number): Promise<Account_Type> {
+  public async get_account_info(account_id: number): Promise<Account> {
     return await this.json_transport("get_account_info", { account_id });
   }
-  public async get_all_accounts(): Promise<Account_Type[]> {
+  public async get_all_accounts(): Promise<Account[]> {
     return await this.json_transport("get_all_accounts", undefined);
   }
   public async select_account(id: number): Promise<void> {
@@ -174,11 +167,26 @@ export class RawApi {
   public async sc_stop_ongoing_process(): Promise<void> {
     return await this.json_transport("sc_stop_ongoing_process", undefined);
   }
+  public async sc_autocrypt_initiate_key_transfer(): Promise<string> {
+    return await this.json_transport(
+      "sc_autocrypt_initiate_key_transfer",
+      undefined
+    );
+  }
+  public async sc_autocrypt_continue_key_transfer(
+    message_id: number,
+    setup_code: string
+  ): Promise<void> {
+    return await this.json_transport("sc_autocrypt_continue_key_transfer", {
+      message_id,
+      setup_code,
+    });
+  }
   public async sc_get_chatlist_entries(
     list_flags: number,
     query_string: string | null,
     query_contact_id: number | null
-  ): Promise<ChatListEntry_Type[]> {
+  ): Promise<ChatListEntry[]> {
     return await this.json_transport("sc_get_chatlist_entries", {
       list_flags,
       query_string,
@@ -186,7 +194,7 @@ export class RawApi {
     });
   }
   public async sc_get_chatlist_items_by_entries(
-    entries: ChatListEntry_Type[]
+    entries: ChatListEntry[]
   ): Promise<{ [key: number]: ChatListItemFetchResult_Type }> {
     return await this.json_transport("sc_get_chatlist_items_by_entries", {
       entries,
@@ -194,7 +202,7 @@ export class RawApi {
   }
   public async sc_chatlist_get_full_chat_by_id(
     chat_id: number
-  ): Promise<FullChat_Type> {
+  ): Promise<FullChat> {
     return await this.json_transport("sc_chatlist_get_full_chat_by_id", {
       chat_id,
     });
@@ -214,21 +222,17 @@ export class RawApi {
       flags,
     });
   }
-  public async sc_message_get_message(
-    message_id: number
-  ): Promise<Message_Type> {
+  public async sc_message_get_message(message_id: number): Promise<Message> {
     return await this.json_transport("sc_message_get_message", { message_id });
   }
   public async sc_message_get_messages(
     message_ids: number[]
-  ): Promise<{ [key: number]: Message_Type }> {
+  ): Promise<{ [key: number]: Message }> {
     return await this.json_transport("sc_message_get_messages", {
       message_ids,
     });
   }
-  public async sc_contacts_get_contact(
-    contact_id: number
-  ): Promise<Contact_Type> {
+  public async sc_contacts_get_contact(contact_id: number): Promise<Contact> {
     return await this.json_transport("sc_contacts_get_contact", { contact_id });
   }
   public async sc_contacts_create_contact(
@@ -253,7 +257,7 @@ export class RawApi {
   public async sc_contacts_unblock(contact_id: number): Promise<void> {
     return await this.json_transport("sc_contacts_unblock", { contact_id });
   }
-  public async sc_contacts_get_blocked(): Promise<Contact_Type[]> {
+  public async sc_contacts_get_blocked(): Promise<Contact[]> {
     return await this.json_transport("sc_contacts_get_blocked", undefined);
   }
   public async sc_contacts_get_contact_ids(
@@ -268,7 +272,7 @@ export class RawApi {
   public async sc_contacts_get_contacts(
     list_flags: number,
     query: string | null
-  ): Promise<Contact_Type[]> {
+  ): Promise<Contact[]> {
     return await this.json_transport("sc_contacts_get_contacts", {
       list_flags,
       query,
@@ -276,7 +280,7 @@ export class RawApi {
   }
   public async sc_contacts_get_contacts_by_ids(
     ids: number[]
-  ): Promise<{ [key: number]: Contact_Type }> {
+  ): Promise<{ [key: number]: Contact }> {
     return await this.json_transport("sc_contacts_get_contacts_by_ids", {
       ids,
     });

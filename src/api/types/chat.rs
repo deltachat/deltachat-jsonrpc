@@ -13,9 +13,9 @@ use serde::Serialize;
 use super::color_int_to_hex_string;
 use super::contact::ContactObject;
 use super::return_type::*;
-use crate::custom_return_type;
+use ts_rs::TS;
 
-#[derive(Serialize)]
+#[derive(Serialize, TS)]
 pub struct FullChat {
     id: u32,
     name: String,
@@ -36,6 +36,10 @@ pub struct FullChat {
     self_in_group: bool,
     is_muted: bool,
     ephemeral_timer: u32, //TODO look if there are more important properties in newer core versions
+}
+
+impl ReturnType for FullChat {
+    crate::ts_rs_return_type!();
 }
 
 impl FullChat {
@@ -88,39 +92,5 @@ impl FullChat {
             is_muted: chat.is_muted(),
             ephemeral_timer,
         })
-    }
-}
-
-impl ReturnType for FullChat {
-    custom_return_type!("FullChat_Type".to_owned());
-
-    fn get_typescript_type() -> String {
-        r#"
-        {
-            id: number,
-            name: string,
-            is_protected: boolean,
-            profile_image: string,
-            archived: boolean,
-            chat_type: number,
-            is_unpromoted: boolean,
-            is_self_talk: boolean,
-            contacts: Contact_Type[],
-            contact_ids: number[],
-            color: string,
-            fresh_message_counter: number,
-            is_group: boolean,
-            is_contact_request: boolean,
-            is_device_chat: boolean,
-            self_in_group: boolean,
-            is_muted: boolean,
-            ephemeral_timer: number, 
-        }
-        "#
-        .to_owned()
-    }
-
-    fn into_json_value(self) -> Value {
-        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
     }
 }

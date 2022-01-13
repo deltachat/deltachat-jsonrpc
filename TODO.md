@@ -107,11 +107,6 @@ async fn sc_check_qr_code(&self, qrCode: String) -> Result<QrCodeResponse> {}
 
 // login.updateCredentials -> do instead: set config then call `sc_configure`
 
-// autocrypt ----------------------------------------------------------
-
-async fn sc_autocrypt_initiate_key_transfer(&self) -> Result<String> {}
-async fn sc_autocrypt_continue_key_transfer(&self, message_id: u32, key: String) -> Result<String> {}
-
 // backup -------------------------------------------------------------
 
 // INFO: backup functions need to call stop&start io
@@ -318,7 +313,7 @@ class DeltaRemote {
   call(
     fnName: 'burnerAccounts.create',
     url: string
-  ): Promise<{ email: string; password: string }> // think about how to improve that api
+  ): Promise<{ email: string; password: string }> // think about how to improve that api - probably use core api instead
   // extras -------------------------------------------------------------
   call(fnName: 'extras.getLocaleData', locale: string): Promise<LocaleData>
   call(fnName: 'extras.setLocale', locale: string): Promise<void>
@@ -343,3 +338,10 @@ export const DeltaBackend = new DeltaRemote()
 
 
 after that, or while doing it adjust api to be more complete
+
+
+
+
+TODO different test to simulate two devices:
+
+to test autocrypt_initiate_key_transfer & autocrypt_continue_key_transfer

@@ -16,20 +16,12 @@ use serde::{Deserialize, Serialize};
 
 use super::color_int_to_hex_string;
 use super::return_type::*;
-use crate::custom_return_type;
+use ts_rs::TS;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize, TS)]
 pub struct ChatListEntry(pub u32, pub u32);
 impl ReturnType for ChatListEntry {
-    fn get_typescript_type() -> String {
-        "[number, number]".to_owned()
-    }
-
-    fn into_json_value(self) -> Value {
-        Value::Array(vec![self.0.into_json_value(), self.1.into_json_value()])
-    }
-
-    custom_return_type!("ChatListEntry_Type".to_owned());
+    crate::ts_rs_return_type!();
 }
 
 #[derive(Serialize)]
@@ -102,7 +94,7 @@ impl ReturnType for ChatListItemFetchResult {
         jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
     }
 
-    custom_return_type!("ChatListItemFetchResult_Type".to_owned());
+    crate::custom_return_type!("ChatListItemFetchResult_Type".to_owned());
 }
 
 pub(crate) async fn _get_chat_list_items_by_id(
