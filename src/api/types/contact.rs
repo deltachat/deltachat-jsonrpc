@@ -30,8 +30,8 @@ impl ReturnType for ContactObject {
 
 impl ContactObject {
     pub async fn from_dc_contact(
-        contact: deltachat::contact::Contact,
         context: &Context,
+        contact: deltachat::contact::Contact,
     ) -> Result<Self> {
         let profile_image = match contact.get_profile_image(context).await? {
             Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),
@@ -48,7 +48,7 @@ impl ContactObject {
             id: contact.id,
             name: contact.get_name().to_owned(),
             profile_image, //BLOBS
-            name_and_addr: contact.get_name_n_addr().to_owned(),
+            name_and_addr: contact.get_name_n_addr(),
             is_blocked: contact.is_blocked(),
             is_verified,
         })
