@@ -106,9 +106,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let account_manager = AccountsWrapper {
         inner: Arc::new(RwLock::new(
-            Accounts::new(PathBuf::from("./accounts"))
-                .await
-                .unwrap(),
+            Accounts::new(PathBuf::from("./accounts")).await.unwrap(),
         )),
     };
 
