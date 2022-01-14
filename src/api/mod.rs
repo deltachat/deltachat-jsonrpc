@@ -78,7 +78,7 @@ impl CommandApi {
     //
     // ---------------------------------------------
     async fn check_email_validity(&self, email: String) -> bool {
-        return may_be_valid_addr(&email);
+        may_be_valid_addr(&email)
     }
 
     /// get general info, even if no context is selected
@@ -86,8 +86,16 @@ impl CommandApi {
         get_info()
     }
 
-    async fn get_provider_info(&self, email: String) -> Option<ProviderInfo> {
-        ProviderInfo::from_dc_type(get_provider_info(&email, false).await)
+    async fn sc_get_provider_info(&self, email: String) -> Result<Option<ProviderInfo>> {
+        let sc = self.selected_context().await?;
+
+        let socks5_enabled = sc
+            .get_config_bool(deltachat::config::Config::Socks5Enabled)
+            .await?;
+
+        let provider_info =
+            get_provider_info(&sc, email.split('@').last().unwrap_or(""), socks5_enabled).await;
+        Ok(ProviderInfo::from_dc_type(provider_info))
     }
 
     // ---------------------------------------------
@@ -239,7 +247,7 @@ impl CommandApi {
         let mut l: Vec<ChatListEntry> = Vec::new();
         for i in 0..list.len() {
             l.push(ChatListEntry(
-                list.get_chat_id(i).to_u32(),
+                list.get_chat_id(i)?.to_u32(),
                 list.get_msg_id(i)?.unwrap_or_default().to_u32(),
             ));
         }

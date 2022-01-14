@@ -54,21 +54,6 @@ describe("basic tests", () => {
     ).to.not.contain(true);
   });
 
-  it("get provider info for example.com", async () => {
-    const info = await dc.raw_api.get_provider_info("example.com");
-    expect(info).to.be.not.null;
-    expect(info?.overview_page).to.equal(
-      "https://providers.delta.chat/example-com"
-    );
-    expect(info?.status).to.equal(3);
-  });
-
-  it("get provider info - domain and email should give same result", async () => {
-    const info_domain = await dc.raw_api.get_provider_info("example.com");
-    const info_email = await dc.raw_api.get_provider_info("hi@example.com");
-    expect(info_email).to.deep.equal(info_domain);
-  });
-
   it("system info", async () => {
     const system_info = await dc.raw_api.get_system_info();
     expect(system_info).to.contain.keys([

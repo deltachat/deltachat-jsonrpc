@@ -18,7 +18,7 @@ mod tests {
 
         // PathBuf::from("./accounts")
         let account_manager = AccountsWrapper {
-            inner: Arc::new(RwLock::new(Accounts::new("".to_string(), tmp_dir).await?)),
+            inner: Arc::new(RwLock::new(Accounts::new(tmp_dir).await?)),
         };
 
         let cmd_api = CommandApi::new(account_manager);

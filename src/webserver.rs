@@ -106,7 +106,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let account_manager = AccountsWrapper {
         inner: Arc::new(RwLock::new(
-            Accounts::new("json_api".to_owned(), PathBuf::from("./accounts"))
+            Accounts::new(PathBuf::from("./accounts"))
                 .await
                 .unwrap(),
         )),
