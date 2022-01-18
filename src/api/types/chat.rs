@@ -7,15 +7,14 @@ use deltachat::context::Context;
 use num_traits::cast::ToPrimitive;
 
 use anyhow::{anyhow, Result};
-use jsonrpc_core::serde_json::Value;
+
 use serde::Serialize;
 
 use super::color_int_to_hex_string;
 use super::contact::ContactObject;
-use super::return_type::*;
-use ts_rs::TS;
+use typescript_type_def::TypeDef;
 
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 pub struct FullChat {
     id: u32,
     name: String,
@@ -36,10 +35,6 @@ pub struct FullChat {
     self_in_group: bool,
     is_muted: bool,
     ephemeral_timer: u32, //TODO look if there are more important properties in newer core versions
-}
-
-impl ReturnType for FullChat {
-    crate::ts_rs_return_type!();
 }
 
 impl FullChat {

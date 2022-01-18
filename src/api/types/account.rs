@@ -3,15 +3,14 @@ use deltachat::constants::*;
 use deltachat::contact::Contact;
 
 use anyhow::Result;
-use jsonrpc_core::serde_json::Value;
+
 
 use super::color_int_to_hex_string;
-use super::return_type::*;
 
 use serde::Serialize;
-use ts_rs::TS;
+use typescript_type_def::TypeDef;
 
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 #[serde(tag = "type")]
 pub enum Account {
     //#[serde(rename_all = "camelCase")]
@@ -26,10 +25,6 @@ pub enum Account {
     Unconfigured {
         id: u32,
     },
-}
-
-impl ReturnType for Account {
-    crate::ts_rs_return_type!();
 }
 
 impl Account {

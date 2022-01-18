@@ -11,20 +11,16 @@ use deltachat::{
 use num_traits::cast::ToPrimitive;
 
 use anyhow::Result;
-use jsonrpc_core::serde_json::Value;
+
 use serde::{Deserialize, Serialize};
 
 use super::color_int_to_hex_string;
-use super::return_type::*;
-use ts_rs::TS;
+use typescript_type_def::TypeDef;
 
-#[derive(Deserialize, Serialize, TS)]
+#[derive(Deserialize, Serialize, TypeDef)]
 pub struct ChatListEntry(pub u32, pub u32);
-impl ReturnType for ChatListEntry {
-    crate::ts_rs_return_type!();
-}
 
-#[derive(Serialize)]
+#[derive(Serialize, TypeDef)]
 #[serde(tag = "type")]
 pub enum ChatListItemFetchResult {
     #[serde(rename_all = "camelCase")]
@@ -55,46 +51,6 @@ pub enum ChatListItemFetchResult {
         id: u32,
         error: String,
     },
-}
-
-impl ReturnType for ChatListItemFetchResult {
-    fn get_typescript_type() -> String {
-        "\n | { \
-            type: \"ChatListItem\"; \
-            id: number; \
-            name: string; \
-            avatarPath: null | string; \
-            color: string; \
-            lastUpdated: number; \
-            freshMessageCounter: number; \
-            summaryStatus: number; \
-            summaryText1: string; \
-            summaryText2: string; \
-            isArchived: boolean; \
-            isDeviceTalk: boolean; \
-            isGroup: boolean; \
-            isMuted: boolean; \
-            isPinned: boolean; \
-            isSelfInGroup: boolean; \
-            isSelfTalk: boolean; \
-            isSendingLocation: boolean; \
-            isProtected: boolean; \
-            isContactRequest: boolean; \
-          } \
-        | { type: \"ArchiveLink\" } \
-        | { \
-            type: \"Error\"; \
-            id: number; \
-            error: string; \
-          }"
-        .to_owned()
-    }
-
-    fn into_json_value(self) -> Value {
-        jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here?
-    }
-
-    crate::custom_return_type!("ChatListItemFetchResult_Type".to_owned());
 }
 
 pub(crate) async fn _get_chat_list_items_by_id(

@@ -5,14 +5,13 @@ use deltachat::message::MsgId;
 use num_traits::cast::ToPrimitive;
 
 use anyhow::{anyhow, Result};
-use jsonrpc_core::serde_json::Value;
+
 use serde::Serialize;
-use ts_rs::TS;
+use typescript_type_def::TypeDef;
 
 use super::contact::ContactObject;
-use super::return_type::*;
 
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 #[serde(rename = "Message")]
 pub struct MessageObject {
     id: u32,
@@ -54,10 +53,6 @@ pub struct MessageObject {
     file_mime: Option<String>,
     file_bytes: u64,
     file_name: Option<String>,
-}
-
-impl ReturnType for MessageObject {
-    crate::ts_rs_return_type!();
 }
 
 impl MessageObject {

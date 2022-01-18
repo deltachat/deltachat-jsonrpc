@@ -3,8 +3,8 @@ use deltachat::message::MsgId;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use std::{collections::HashMap, str::FromStr};
+use yerpc::rpc;
 
-use dc_cmd_derive::gen_command_api;
 use deltachat::{
     accounts::Accounts,
     chat::{get_chat_msgs, ChatId},
@@ -18,7 +18,7 @@ use deltachat::{
 };
 
 use anyhow::{anyhow, bail, Result};
-use serde::Deserialize;
+
 
 pub mod events;
 pub mod types;
@@ -31,7 +31,7 @@ use types::chat_list::ChatListEntry;
 use types::contact::ContactObject;
 use types::message::MessageObject;
 use types::provider_info::ProviderInfo;
-use types::return_type::*;
+// use types::return_type::*;
 
 #[derive(Clone, Debug)]
 pub struct AccountsWrapper {
@@ -48,7 +48,7 @@ impl Deref for AccountsWrapper {
 
 #[derive(Clone, Debug)]
 pub struct CommandApi {
-    manager: AccountsWrapper,
+    pub(crate) manager: AccountsWrapper,
 }
 
 impl CommandApi {
@@ -70,7 +70,7 @@ impl CommandApi {
     }
 }
 
-#[gen_command_api]
+#[rpc(all_positional, ts_outdir = "typescriptNew/generated")]
 impl CommandApi {
     // ---------------------------------------------
     //

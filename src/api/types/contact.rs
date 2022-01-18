@@ -2,13 +2,13 @@ use deltachat::contact::VerifiedStatus;
 use deltachat::context::Context;
 
 use anyhow::Result;
-use jsonrpc_core::serde_json::Value;
 
-use super::{color_int_to_hex_string, return_type::*};
+
+use super::{color_int_to_hex_string};
 use serde::Serialize;
-use ts_rs::TS;
+use typescript_type_def::TypeDef;
 
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 #[serde(rename = "Contact")]
 pub struct ContactObject {
     address: String,
@@ -22,10 +22,6 @@ pub struct ContactObject {
     name_and_addr: String,
     is_blocked: bool,
     is_verified: bool,
-}
-
-impl ReturnType for ContactObject {
-    crate::ts_rs_return_type!();
 }
 
 impl ContactObject {

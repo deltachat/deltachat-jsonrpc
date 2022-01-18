@@ -1,5 +1,5 @@
 use deltachat::{Event, EventType};
-use jsonrpc_core::{serde_json::json, Value};
+use serde_json::{json, Value};
 
 pub fn event_to_json_rpc_notification(event: Event) -> Value {
     let (field1, field2): (Value, Value) = match &event.typ {

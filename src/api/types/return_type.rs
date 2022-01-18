@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
-use jsonrpc_core::serde_json::{json, Map, Value};
+use serde_json::{json, Map, Value};
 
 /** idea of the return type abstraction, versus using json directly is that this way other formats can be easialy added in the future */
 pub(crate) trait ReturnType {
@@ -58,7 +58,7 @@ macro_rules! ts_rs_return_type {
         }
 
         fn into_json_value(self) -> Value {
-            jsonrpc_core::serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here? (the json! macro has it too)
+            serde_json::to_value(self).unwrap() // todo: can we somehow get rid of that unwrap here? (the json! macro has it too)
         }
 
         fn makes_use_of_custom_ts_type() -> bool {
