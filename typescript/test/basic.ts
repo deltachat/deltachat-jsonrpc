@@ -13,7 +13,7 @@ describe("basic tests", () => {
   let server_handle: CMD_API_Server_Handle;
   const dc = new DeltaChat(
     "ws://localhost:" + CMD_API_SERVER_PORT + "/api_ws",
-    "silent"
+    "silent",
   );
 
   before(async () => {
@@ -41,16 +41,16 @@ describe("basic tests", () => {
       await Promise.all(
         positive_test_cases.map((email) =>
           dc.raw_api.check_email_validity(email)
-        )
-      )
+        ),
+      ),
     ).to.not.contain(false);
 
     expect(
       await Promise.all(
         negative_test_cases.map((email) =>
           dc.raw_api.check_email_validity(email)
-        )
-      )
+        ),
+      ),
     ).to.not.contain(true);
   });
 
@@ -74,7 +74,7 @@ describe("basic tests", () => {
       await dc.raw_api.remove_account(
         (
           await dc.raw_api.get_all_account_ids()
-        )[0]
+        )[0],
       );
       assert((await dc.raw_api.get_all_account_ids()).length === 0);
     });
@@ -96,7 +96,7 @@ describe("basic tests", () => {
     it("block and unblock contact", async function () {
       const contactId = await dc.raw_api.sc_contacts_create_contact(
         "example@delta.chat",
-        null
+        null,
       );
       expect((await dc.raw_api.sc_contacts_get_contact(contactId)).is_blocked)
         .to.be.false;

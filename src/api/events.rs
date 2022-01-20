@@ -61,13 +61,9 @@ pub fn event_to_json_rpc_notification(event: Event) -> Value {
     };
 
     json!({
-        "jsonrpc": "2.0",
-        "method": "event",
-        "params": {
-            "id": event.typ.as_id(),
-            "contextId": event.id,
-            "field1": field1,
-            "field2": field2
-        }
+        "id": event.typ.as_id(),
+        "contextId": event.id,
+        "field1": field1,
+        "field2": field2
     })
 }

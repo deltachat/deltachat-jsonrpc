@@ -1,12 +1,7 @@
+use anyhow::{anyhow, bail, Result};
 use async_std::sync::{Arc, RwLock};
 use deltachat::message::MsgId;
-use std::collections::BTreeMap;
-use std::ops::Deref;
-use std::{collections::HashMap, str::FromStr};
-use yerpc::rpc;
-
 use deltachat::{
-    accounts::Accounts,
     chat::{get_chat_msgs, ChatId},
     chatlist::Chatlist,
     config::Config,
@@ -16,9 +11,11 @@ use deltachat::{
     message::Message,
     provider::get_provider_info,
 };
+use std::collections::BTreeMap;
+use std::{collections::HashMap, str::FromStr};
+use yerpc::rpc;
 
-use anyhow::{anyhow, bail, Result};
-
+pub use deltachat::accounts::Accounts;
 
 pub mod events;
 pub mod types;
@@ -31,34 +28,22 @@ use types::chat_list::ChatListEntry;
 use types::contact::ContactObject;
 use types::message::MessageObject;
 use types::provider_info::ProviderInfo;
-// use types::return_type::*;
-
-#[derive(Clone, Debug)]
-pub struct AccountsWrapper {
-    pub inner: Arc<RwLock<Accounts>>,
-}
-
-impl Deref for AccountsWrapper {
-    type Target = RwLock<Accounts>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct CommandApi {
-    pub(crate) manager: AccountsWrapper,
+    pub(crate) accounts: Arc<RwLock<Accounts>>,
 }
 
 impl CommandApi {
-    pub fn new(am: AccountsWrapper) -> Self {
-        CommandApi { manager: am }
+    pub fn new(accounts: Accounts) -> Self {
+        CommandApi {
+            accounts: Arc::new(RwLock::new(accounts)),
+        }
     }
 
     async fn selected_context(&self) -> Result<deltachat::context::Context> {
         let sc = self
-            .manager
+            .accounts
             .read()
             .await
             .get_selected_account()
@@ -70,7 +55,7 @@ impl CommandApi {
     }
 }
 
-#[rpc(all_positional, ts_outdir = "typescriptNew/generated")]
+#[rpc(all_positional, ts_outdir = "typescript/generated")]
 impl CommandApi {
     // ---------------------------------------------
     //
@@ -105,19 +90,19 @@ impl CommandApi {
     // ---------------------------------------------
 
     async fn add_account(&self) -> Result<u32> {
-        self.manager.write().await.add_account().await
+        self.accounts.write().await.add_account().await
     }
 
     async fn remove_account(&self, account_id: u32) -> Result<()> {
-        self.manager.write().await.remove_account(account_id).await
+        self.accounts.write().await.remove_account(account_id).await
     }
 
     async fn get_all_account_ids(&self) -> Vec<u32> {
-        self.manager.read().await.get_all().await
+        self.accounts.read().await.get_all().await
     }
 
     async fn get_account_info(&self, account_id: u32) -> Result<Account> {
-        let context_option = self.manager.read().await.get_account(account_id).await;
+        let context_option = self.accounts.read().await.get_account(account_id).await;
         if let Some(ctx) = context_option {
             Ok(Account::from_context(account_id, &ctx).await?)
         } else {
@@ -130,8 +115,8 @@ impl CommandApi {
 
     async fn get_all_accounts(&self) -> Result<Vec<Account>> {
         let mut accounts = Vec::new();
-        for id in self.manager.read().await.get_all().await {
-            let context_option = self.manager.read().await.get_account(id).await;
+        for id in self.accounts.read().await.get_all().await {
+            let context_option = self.accounts.read().await.get_account(id).await;
             if let Some(ctx) = context_option {
                 accounts.push(Account::from_context(id, &ctx).await?)
             } else {
@@ -142,11 +127,11 @@ impl CommandApi {
     }
 
     async fn select_account(&self, id: u32) -> Result<()> {
-        self.manager.write().await.select_account(id).await
+        self.accounts.write().await.select_account(id).await
     }
 
     async fn get_selected_account_id(&self) -> Option<u32> {
-        self.manager.read().await.get_selected_account_id().await
+        self.accounts.read().await.get_selected_account_id().await
     }
 
     // ---------------------------------------------

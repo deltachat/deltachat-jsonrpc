@@ -12,7 +12,7 @@ describe("online tests", function () {
   let server_handle: CMD_API_Server_Handle;
   const dc = new DeltaChat(
     "ws://localhost:" + CMD_API_SERVER_PORT + "/api_ws",
-    "silent"
+    "silent",
   );
   let account = null as any as { email: string; password: string };
   let account2 = null as any as { email: string; password: string };
@@ -24,12 +24,12 @@ describe("online tests", function () {
       if (process.env.COVERAGE && !process.env.COVERAGE_OFFLINE) {
         console.error(
           "CAN NOT RUN COVERAGE correctly: Missing DCC_NEW_TMP_EMAIL environment variable!\n\n",
-          "You can set COVERAGE_OFFLINE=1 to circumvent this check and skip the online tests, but those coverage results will be wrong, because some functions can only be tested in the online test"
+          "You can set COVERAGE_OFFLINE=1 to circumvent this check and skip the online tests, but those coverage results will be wrong, because some functions can only be tested in the online test",
         );
         process.exit(1);
       }
       console.log(
-        "Missing DCC_NEW_TMP_EMAIL environment variable!, skip intergration tests"
+        "Missing DCC_NEW_TMP_EMAIL environment variable!, skip intergration tests",
       );
       this.skip();
     }
@@ -37,7 +37,7 @@ describe("online tests", function () {
     account = await createTempUser(process.env.DCC_NEW_TMP_EMAIL);
     if (!account || !account.email || !account.password) {
       console.log(
-        "We didn't got back an account from the api, skip intergration tests"
+        "We didn't got back an account from the api, skip intergration tests",
       );
       this.skip();
     }
@@ -45,7 +45,7 @@ describe("online tests", function () {
     account2 = await createTempUser(process.env.DCC_NEW_TMP_EMAIL);
     if (!account2 || !account2.email || !account2.password) {
       console.log(
-        "We didn't got back an account2 from the api, skip intergration tests"
+        "We didn't got back an account2 from the api, skip intergration tests",
       );
       this.skip();
     }
@@ -87,24 +87,24 @@ describe("online tests", function () {
     await dc.raw_api.select_account(1);
     const contactId = await dc.raw_api.sc_contacts_create_contact(
       account2.email,
-      null
+      null,
     );
     const chatId = await dc.raw_api.sc_contacts_create_chat_by_contact_id(
-      contactId
+      contactId,
     );
     dc.raw_api.sc_misc_send_text_message("Hello", chatId);
 
     const { field1: chatIdOnAccountB } = await waitForEvent(
       dc,
       "INCOMING_MSG",
-      2
+      2,
     );
 
     await dc.raw_api.select_account(2);
     await dc.raw_api.sc_accept_chat(chatIdOnAccountB);
     const messageList = await dc.raw_api.sc_message_list_get_message_ids(
       chatIdOnAccountB,
-      0
+      0,
     );
 
     expect(messageList).have.length(1);
@@ -122,10 +122,10 @@ describe("online tests", function () {
     await dc.raw_api.select_account(1);
     const contactId = await dc.raw_api.sc_contacts_create_contact(
       account2.email,
-      null
+      null,
     );
     const chatId = await dc.raw_api.sc_contacts_create_chat_by_contact_id(
-      contactId
+      contactId,
     );
     dc.raw_api.sc_misc_send_text_message("Hello2", chatId);
     // wait for message from A
@@ -136,10 +136,10 @@ describe("online tests", function () {
     await dc.raw_api.sc_accept_chat(chatIdOnAccountB);
     const messageList = await dc.raw_api.sc_message_list_get_message_ids(
       chatIdOnAccountB,
-      0
+      0,
     );
     const message = await dc.raw_api.sc_message_get_message(
-      messageList.reverse()[0]
+      messageList.reverse()[0],
     );
     expect(message.text).equal("Hello2");
     // Send message back from B to A
@@ -160,7 +160,7 @@ describe("online tests", function () {
     const info = await dc.raw_api.sc_get_provider_info("example.com");
     expect(info).to.be.not.null;
     expect(info?.overview_page).to.equal(
-      "https://providers.delta.chat/example-com"
+      "https://providers.delta.chat/example-com",
     );
     expect(info?.status).to.equal(3);
   });
@@ -180,7 +180,7 @@ type event_data = {
 async function waitForEvent(
   dc: DeltaChat,
   event: ReturnType<typeof get_event_name_from_id>,
-  accountId: number
+  accountId: number,
 ): Promise<event_data> {
   return new Promise((res, rej) => {
     const callback = (ev: event_data) => {

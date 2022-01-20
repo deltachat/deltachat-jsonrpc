@@ -9,12 +9,12 @@ license = "MPL-2.0"
 [[bin]]
 name = "webserver"
 path = "src/webserver.rs"
-required-features = ["webserver"]
 
 [dependencies]
 anyhow = "1.0.52"
 async-std = { version = "1.10.0", features = ["attributes"] }
 deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", rev = "9b562eebcd65fea91b06737a96e0eec7a576e942" }
+# deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", tag = "1.70.0" }
 num-traits = "0.2.14"
 serde = { version = "1.0.133", features = ["derive"] }
 tempfile = "3.3.0"
@@ -32,6 +32,7 @@ typescript-type-def = { git = "https://github.com/Frando/rust-typescript-type-de
 
 
 [features]
+default = ["webserver"]
 webserver = ["async-channel", "env_logger", "futures", "tide", "tide-websockets" ]
 
 [profile.release]

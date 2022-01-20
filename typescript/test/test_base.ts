@@ -17,7 +17,7 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
     throw new Error(
       "server executable does not exist, you need to build it first" +
         "\nserver executable not found at " +
-        path_of_server
+        path_of_server,
     );
   }
 
