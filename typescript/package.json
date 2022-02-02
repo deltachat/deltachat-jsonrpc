@@ -8,15 +8,15 @@
   "license": "MPL-2.0",
   "scripts": {
     "build": "tsc",
-    "bundle": "tsc && esbuild --bundle dist/deltachat.js --outfile=dist/deltachat.bundle.js",
+    "bundle": "npm run generate-bindings && tsc && esbuild --bundle dist/deltachat.js --outfile=dist/deltachat.bundle.js",
     "generate-bindings": "cargo test",
-    "example:build": "yarn upgrade yerpc && tsc && esbuild --bundle dist/example.js --outfile=dist/example.bundle.js",
+    "example:build": "tsc && esbuild --bundle dist/example.js --outfile=dist/example.bundle.js",
     "example:dev": "esbuild example.ts --bundle --outdir=dist --servedir=.",
     "coverage": "npx tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs"
   },
   "dependencies": {
     "isomorphic-ws": "^4.0.1",
-    "yerpc": "file:../../yerpc/yerpc/typescript"
+    "yerpc": "^0.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.21",

@@ -3973,6 +3973,7 @@ dependencies = [
 [[package]]
 name = "yerpc"
 version = "0.1.0"
+source = "git+https://github.com/Frando/yerpc#e7894f796fbf07d7177342678203d43e7e092f02"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -3989,6 +3990,7 @@ dependencies = [
 [[package]]
 name = "yerpc-tide"
 version = "0.1.0"
+source = "git+https://github.com/Frando/yerpc#e7894f796fbf07d7177342678203d43e7e092f02"
 dependencies = [
  "anyhow",
  "async-std",
@@ -4002,6 +4004,7 @@ dependencies = [
 [[package]]
 name = "yerpc_derive"
 version = "0.1.0"
+source = "git+https://github.com/Frando/yerpc#e7894f796fbf07d7177342678203d43e7e092f02"
 dependencies = [
  "convert_case",
  "darling 0.13.1",
