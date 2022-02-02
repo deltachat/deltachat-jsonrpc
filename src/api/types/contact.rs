@@ -43,7 +43,7 @@ impl ContactObject {
             id: contact.id,
             name: contact.get_name().to_owned(),
             profile_image, //BLOBS
-            name_and_addr: contact.get_name_n_addr().to_owned(),
+            name_and_addr: contact.get_name_n_addr(),
             is_blocked: contact.is_blocked(),
             is_verified,
         })

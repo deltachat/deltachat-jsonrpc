@@ -40,7 +40,7 @@ pub struct FullChat {
 impl FullChat {
     pub async fn from_dc_chat_id(chat_id: u32, context: &Context) -> Result<Self> {
         let rust_chat_id = ChatId::new(chat_id);
-        let chat = Chat::load_from_db(&context, rust_chat_id).await?;
+        let chat = Chat::load_from_db(context, rust_chat_id).await?;
 
         let contact_ids = get_chat_contacts(context, rust_chat_id).await?;
 

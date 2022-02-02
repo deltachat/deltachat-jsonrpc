@@ -67,33 +67,30 @@ pub(crate) async fn _get_chat_list_items_by_id(
         return Ok(ChatListItemFetchResult::ArchiveLink);
     }
 
-    let chat = Chat::load_from_db(&ctx, chat_id).await?;
-    let summary = Chatlist::get_summary2(&ctx, chat_id, last_msgid, Some(&chat)).await?;
+    let chat = Chat::load_from_db(ctx, chat_id).await?;
+    let summary = Chatlist::get_summary2(ctx, chat_id, last_msgid, Some(&chat)).await?;
 
     let summary_text1 = summary.prefix.map_or_else(String::new, |s| s.to_string());
     let summary_text2 = summary.text.to_owned();
 
     let visibility = chat.get_visibility();
 
-    let avatar_path = match chat.get_profile_image(ctx).await? {
-        Some(path) => Some(path.to_str().unwrap_or("invalid/path").to_owned()),
-        None => None,
-    };
+    let avatar_path = chat.get_profile_image(ctx).await?.map(|path| path.to_str().unwrap_or("invalid/path").to_owned());
 
     let last_updated = match last_msgid {
         Some(id) => {
-            let last_message = deltachat::message::Message::load_from_db(&ctx, id).await?;
+            let last_message = deltachat::message::Message::load_from_db(ctx, id).await?;
             Some(last_message.get_timestamp() * 1000)
         }
         None => None,
     };
 
-    let self_in_group = get_chat_contacts(&ctx, chat_id)
+    let self_in_group = get_chat_contacts(ctx, chat_id)
         .await?
         .contains(&DC_CONTACT_ID_SELF);
 
-    let fresh_message_counter = chat_id.get_fresh_msg_cnt(&ctx).await?;
-    let color = color_int_to_hex_string(chat.get_color(&ctx).await?);
+    let fresh_message_counter = chat_id.get_fresh_msg_cnt(ctx).await?;
+    let color = color_int_to_hex_string(chat.get_color(ctx).await?);
 
     Ok(ChatListItemFetchResult::ChatListItem {
         id: chat_id.to_u32(),

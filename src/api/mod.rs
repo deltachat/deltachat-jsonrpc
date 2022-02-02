@@ -123,7 +123,7 @@ impl CommandApi {
                 println!("account with id {} doesn't exist anymore", id);
             }
         }
-        return Ok(accounts);
+        Ok(accounts)
     }
 
     async fn select_account(&self, id: u32) -> Result<()> {
