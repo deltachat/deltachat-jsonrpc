@@ -1,8 +1,8 @@
 use deltachat::provider::Provider;
 
 use num_traits::cast::ToPrimitive;
-use typescript_type_def::TypeDef;
 use serde::Serialize;
+use typescript_type_def::TypeDef;
 
 #[derive(Serialize, TypeDef)]
 pub struct ProviderInfo {

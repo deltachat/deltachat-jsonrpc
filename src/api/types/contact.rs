@@ -3,8 +3,7 @@ use deltachat::context::Context;
 
 use anyhow::Result;
 
-
-use super::{color_int_to_hex_string};
+use super::color_int_to_hex_string;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
 

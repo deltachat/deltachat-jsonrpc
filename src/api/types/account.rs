@@ -4,7 +4,6 @@ use deltachat::contact::Contact;
 
 use anyhow::Result;
 
-
 use super::color_int_to_hex_string;
 
 use serde::Serialize;
