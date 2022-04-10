@@ -78,7 +78,7 @@ impl CommandApi {
     //
     // ---------------------------------------------
     async fn check_email_validity(&self, email: String) -> bool {
-        return may_be_valid_addr(&email);
+        may_be_valid_addr(&email)
     }
 
     /// get general info, even if no context is selected
@@ -130,7 +130,7 @@ impl CommandApi {
                 println!("account with id {} doesn't exist anymore", id);
             }
         }
-        return Ok(accounts);
+        Ok(accounts)
     }
 
     async fn select_account(&self, id: u32) -> Result<()> {
@@ -274,7 +274,7 @@ impl CommandApi {
 
     async fn sc_chatlist_get_full_chat_by_id(&self, chat_id: u32) -> Result<FullChat> {
         let sc = self.selected_context().await?;
-        FullChat::from_dc_chat_id(chat_id, &sc).await
+        FullChat::from_dc_chat_id(&sc, chat_id).await
     }
 
     async fn sc_accept_chat(&self, chat_id: u32) -> Result<()> {
@@ -305,7 +305,7 @@ impl CommandApi {
 
     async fn sc_message_get_message(&self, message_id: u32) -> Result<MessageObject> {
         let sc = self.selected_context().await?;
-        MessageObject::from_message_id(message_id, &sc).await
+        MessageObject::from_message_id(&sc, message_id).await
     }
 
     async fn sc_message_get_messages(
@@ -317,7 +317,7 @@ impl CommandApi {
         for message_id in message_ids {
             messages.insert(
                 message_id,
-                MessageObject::from_message_id(message_id, &sc).await?,
+                MessageObject::from_message_id(&sc, message_id).await?,
             );
         }
         Ok(messages)
@@ -331,8 +331,8 @@ impl CommandApi {
         let sc = self.selected_context().await?;
 
         ContactObject::from_dc_contact(
-            deltachat::contact::Contact::get_by_id(&sc, contact_id).await?,
             &sc,
+            deltachat::contact::Contact::get_by_id(&sc, contact_id).await?,
         )
         .await
     }
@@ -376,8 +376,8 @@ impl CommandApi {
         for id in blocked_ids {
             contacts.push(
                 ContactObject::from_dc_contact(
-                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
                     &sc,
+                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
                 )
                 .await?,
             );
@@ -406,8 +406,8 @@ impl CommandApi {
         for id in contact_ids {
             contacts.push(
                 ContactObject::from_dc_contact(
-                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
                     &sc,
+                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
                 )
                 .await?,
             );
@@ -426,8 +426,8 @@ impl CommandApi {
             contacts.insert(
                 id,
                 ContactObject::from_dc_contact(
-                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
                     &sc,
+                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
                 )
                 .await?,
             );

@@ -61,7 +61,7 @@ impl ReturnType for MessageObject {
 }
 
 impl MessageObject {
-    pub async fn from_message_id(message_id: u32, context: &Context) -> Result<Self> {
+    pub async fn from_message_id(context: &Context, message_id: u32) -> Result<Self> {
         let msg_id = MsgId::new(message_id);
         let message = Message::load_from_db(context, msg_id).await?;
 
@@ -71,7 +71,7 @@ impl MessageObject {
             .map(|m| m.get_id().to_u32());
 
         let sender_contact = Contact::load_from_db(context, message.get_from_id()).await?;
-        let sender = ContactObject::from_dc_contact(sender_contact, context).await?;
+        let sender = ContactObject::from_dc_contact(context, sender_contact).await?;
         let file_bytes = message.get_filebytes(context).await;
         let override_sender_name = message.get_override_sender_name();
 
