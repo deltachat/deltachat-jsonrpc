@@ -8,7 +8,7 @@
 The webserver is an example usage. Goal of it is to be usable both as example and as base for deltachat-kaiOS.
 
 ```sh
-RUST_LOG=info cargo run --features webserver
+RUST_LOG=info cargo run
 ```
 
 ## Generate Typescript Bindings
@@ -37,7 +37,7 @@ npm run example:run
 ## Compiling server for kaiOS or android:
 
 ```sh
-cross build --features=webserver --target armv7-linux-androideabi --release
+cross build --target armv7-linux-androideabi --release
 ```
 
 
@@ -47,7 +47,7 @@ cross build --features=webserver --target armv7-linux-androideabi --release
 ### Rust tests
 
 ```
-cargo test --features=webserver 
+cargo test
 ```
 
 ### Typescript
