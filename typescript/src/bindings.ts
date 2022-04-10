@@ -118,10 +118,10 @@ export class RawApi {
   public async get_system_info(): Promise<{ [key: string]: string }> {
     return await this.json_transport("get_system_info", undefined);
   }
-  public async get_provider_info(
+  public async sc_get_provider_info(
     email: string
   ): Promise<ProviderInfo_Type | null> {
-    return await this.json_transport("get_provider_info", { email });
+    return await this.json_transport("sc_get_provider_info", { email });
   }
   public async add_account(): Promise<number> {
     return await this.json_transport("add_account", undefined);
