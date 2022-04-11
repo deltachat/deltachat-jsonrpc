@@ -48,9 +48,7 @@ impl CommandApi {
             .await
             .get_account(id)
             .await
-            .ok_or_else(|| {
-                anyhow!("account with id {} not found", id)
-            })?;
+            .ok_or_else(|| anyhow!("account with id {} not found", id))?;
         Ok(sc)
     }
 }
@@ -76,14 +74,14 @@ impl CommandApi {
         account_id: u32,
         email: String,
     ) -> Result<Option<ProviderInfo>> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
 
-        let socks5_enabled = sc
+        let socks5_enabled = ctx
             .get_config_bool(deltachat::config::Config::Socks5Enabled)
             .await?;
 
         let provider_info =
-            get_provider_info(&sc, email.split('@').last().unwrap_or(""), socks5_enabled).await;
+            get_provider_info(&ctx, email.split('@').last().unwrap_or(""), socks5_enabled).await;
         Ok(ProviderInfo::from_dc_type(provider_info))
     }
 
@@ -147,24 +145,24 @@ impl CommandApi {
     // TODO fn sc_send_message () -> {}
 
     async fn is_configured(&self, account_id: u32) -> Result<bool> {
-        let sc = self.get_context(account_id).await?;
-        Ok(sc.is_configured().await?)
+        let ctx = self.get_context(account_id).await?;
+        Ok(ctx.is_configured().await?)
     }
 
     async fn get_info(&self, account_id: u32) -> Result<BTreeMap<&'static str, String>> {
-        let sc = self.get_context(account_id).await?;
-        Ok(sc.get_info().await?)
+        let ctx = self.get_context(account_id).await?;
+        Ok(ctx.get_info().await?)
     }
 
     async fn set_config(&self, account_id: u32, key: String, value: Option<String>) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
         let value = value.as_ref().map(String::as_ref);
-        Ok(sc.set_config(Config::from_str(&key)?, value).await?)
+        Ok(ctx.set_config(Config::from_str(&key)?, value).await?)
     }
 
     async fn get_config(&self, account_id: u32, key: String) -> Result<Option<String>> {
-        let sc = self.get_context(account_id).await?;
-        Ok(sc.get_config(Config::from_str(&key)?).await?)
+        let ctx = self.get_context(account_id).await?;
+        Ok(ctx.get_config(Config::from_str(&key)?).await?)
     }
 
     async fn batch_get_config(
@@ -172,27 +170,27 @@ impl CommandApi {
         account_id: u32,
         keys: Vec<String>,
     ) -> Result<HashMap<String, Option<String>>> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
         let mut result: HashMap<String, Option<String>> = HashMap::new();
         for key in keys {
-            result.insert(key.clone(), sc.get_config(Config::from_str(&key)?).await?);
+            result.insert(key.clone(), ctx.get_config(Config::from_str(&key)?).await?);
         }
         Ok(result)
     }
 
     /// set config for the credentials before calling this
     async fn configure(&self, account_id: u32) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        sc.stop_io().await;
-        sc.configure().await?;
-        sc.start_io().await;
+        let ctx = self.get_context(account_id).await?;
+        ctx.stop_io().await;
+        ctx.configure().await?;
+        ctx.start_io().await;
         Ok(())
     }
 
     /// Signal an ongoing process to stop.
     async fn stop_ongoing_process(&self, account_id: u32) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        sc.stop_ongoing().await;
+        let ctx = self.get_context(account_id).await?;
+        ctx.stop_ongoing().await;
         Ok(())
     }
 
@@ -201,8 +199,8 @@ impl CommandApi {
     // ---------------------------------------------
 
     async fn autocrypt_initiate_key_transfer(&self, account_id: u32) -> Result<String> {
-        let sc = self.get_context(account_id).await?;
-        deltachat::imex::initiate_key_transfer(&sc).await
+        let ctx = self.get_context(account_id).await?;
+        deltachat::imex::initiate_key_transfer(&ctx).await
     }
 
     async fn autocrypt_continue_key_transfer(
@@ -211,8 +209,8 @@ impl CommandApi {
         message_id: u32,
         setup_code: String,
     ) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        deltachat::imex::continue_key_transfer(&sc, MsgId::new(message_id), &setup_code).await
+        let ctx = self.get_context(account_id).await?;
+        deltachat::imex::continue_key_transfer(&ctx, MsgId::new(message_id), &setup_code).await
     }
 
     // ---------------------------------------------
@@ -226,9 +224,9 @@ impl CommandApi {
         query_string: Option<String>,
         query_contact_id: Option<u32>,
     ) -> Result<Vec<ChatListEntry>> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
         let list = Chatlist::try_load(
-            &sc,
+            &ctx,
             list_flags as usize,
             query_string.as_deref(),
             query_contact_id,
@@ -250,12 +248,12 @@ impl CommandApi {
         entries: Vec<ChatListEntry>,
     ) -> Result<HashMap<u32, ChatListItemFetchResult>> {
         // todo custom json deserializer for ChatListEntry?
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
         let mut result: HashMap<u32, ChatListItemFetchResult> = HashMap::new();
         for (_i, entry) in entries.iter().enumerate() {
             result.insert(
                 entry.0,
-                match _get_chat_list_items_by_id(&sc, entry).await {
+                match _get_chat_list_items_by_id(&ctx, entry).await {
                     Ok(res) => res,
                     Err(err) => ChatListItemFetchResult::Error {
                         id: entry.0,
@@ -276,18 +274,18 @@ impl CommandApi {
         account_id: u32,
         chat_id: u32,
     ) -> Result<FullChat> {
-        let sc = self.get_context(account_id).await?;
-        FullChat::from_dc_chat_id(&sc, chat_id).await
+        let ctx = self.get_context(account_id).await?;
+        FullChat::from_dc_chat_id(&ctx, chat_id).await
     }
 
     async fn accept_chat(&self, account_id: u32, chat_id: u32) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        ChatId::new(chat_id).accept(&sc).await
+        let ctx = self.get_context(account_id).await?;
+        ChatId::new(chat_id).accept(&ctx).await
     }
 
     async fn block_chat(&self, account_id: u32, chat_id: u32) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        ChatId::new(chat_id).block(&sc).await
+        let ctx = self.get_context(account_id).await?;
+        ChatId::new(chat_id).block(&ctx).await
     }
 
     // ---------------------------------------------
@@ -300,8 +298,8 @@ impl CommandApi {
         chat_id: u32,
         flags: u32,
     ) -> Result<Vec<u32>> {
-        let sc = self.get_context(account_id).await?;
-        let msg = get_chat_msgs(&sc, ChatId::new(chat_id), flags, None).await?;
+        let ctx = self.get_context(account_id).await?;
+        let msg = get_chat_msgs(&ctx, ChatId::new(chat_id), flags, None).await?;
         Ok(msg
             .iter()
             .filter_map(|chat_item| match chat_item {
@@ -312,8 +310,8 @@ impl CommandApi {
     }
 
     async fn message_get_message(&self, account_id: u32, message_id: u32) -> Result<MessageObject> {
-        let sc = self.get_context(account_id).await?;
-        MessageObject::from_message_id(message_id, &sc).await
+        let ctx = self.get_context(account_id).await?;
+        MessageObject::from_message_id(message_id, &ctx).await
     }
 
     async fn message_get_messages(
@@ -321,12 +319,12 @@ impl CommandApi {
         account_id: u32,
         message_ids: Vec<u32>,
     ) -> Result<HashMap<u32, MessageObject>> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
         let mut messages: HashMap<u32, MessageObject> = HashMap::new();
         for message_id in message_ids {
             messages.insert(
                 message_id,
-                MessageObject::from_message_id(message_id, &sc).await?,
+                MessageObject::from_message_id(message_id, &ctx).await?,
             );
         }
         Ok(messages)
@@ -341,11 +339,11 @@ impl CommandApi {
         account_id: u32,
         contact_id: u32,
     ) -> Result<ContactObject> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
 
         ContactObject::from_dc_contact(
-            &sc,
-            deltachat::contact::Contact::get_by_id(&sc, contact_id).await?,
+            &ctx,
+            deltachat::contact::Contact::get_by_id(&ctx, contact_id).await?,
         )
         .await
     }
@@ -359,13 +357,13 @@ impl CommandApi {
         email: String,
         name: Option<String>,
     ) -> Result<u32> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
         if !may_be_valid_addr(&email) {
             bail!(anyhow!(
                 "provided email address is not a valid email address"
             ))
         }
-        Contact::create(&sc, &name.unwrap_or_default(), &email).await
+        Contact::create(&ctx, &name.unwrap_or_default(), &email).await
     }
 
     /// Returns contact id of the created or existing DM chat with that contact
@@ -374,32 +372,32 @@ impl CommandApi {
         account_id: u32,
         contact_id: u32,
     ) -> Result<u32> {
-        let sc = self.get_context(account_id).await?;
-        let contact = Contact::get_by_id(&sc, contact_id).await?;
-        ChatId::create_for_contact(&sc, contact.id)
+        let ctx = self.get_context(account_id).await?;
+        let contact = Contact::get_by_id(&ctx, contact_id).await?;
+        ChatId::create_for_contact(&ctx, contact.id)
             .await
             .map(|id| id.to_u32())
     }
 
     async fn contacts_block(&self, account_id: u32, contact_id: u32) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        Contact::block(&sc, contact_id).await
+        let ctx = self.get_context(account_id).await?;
+        Contact::block(&ctx, contact_id).await
     }
 
     async fn contacts_unblock(&self, account_id: u32, contact_id: u32) -> Result<()> {
-        let sc = self.get_context(account_id).await?;
-        Contact::unblock(&sc, contact_id).await
+        let ctx = self.get_context(account_id).await?;
+        Contact::unblock(&ctx, contact_id).await
     }
 
     async fn contacts_get_blocked(&self, account_id: u32) -> Result<Vec<ContactObject>> {
-        let sc = self.get_context(account_id).await?;
-        let blocked_ids = Contact::get_all_blocked(&sc).await?;
+        let ctx = self.get_context(account_id).await?;
+        let blocked_ids = Contact::get_all_blocked(&ctx).await?;
         let mut contacts: Vec<ContactObject> = Vec::with_capacity(blocked_ids.len());
         for id in blocked_ids {
             contacts.push(
                 ContactObject::from_dc_contact(
-                    &sc,
-                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
+                    &ctx,
+                    deltachat::contact::Contact::get_by_id(&ctx, id).await?,
                 )
                 .await?,
             );
@@ -413,8 +411,8 @@ impl CommandApi {
         list_flags: u32,
         query: Option<String>,
     ) -> Result<Vec<u32>> {
-        let sc = self.get_context(account_id).await?;
-        Contact::get_all(&sc, list_flags, query).await
+        let ctx = self.get_context(account_id).await?;
+        Contact::get_all(&ctx, list_flags, query).await
     }
 
     // formerly called getContacts2 in desktop
@@ -424,14 +422,14 @@ impl CommandApi {
         list_flags: u32,
         query: Option<String>,
     ) -> Result<Vec<ContactObject>> {
-        let sc = self.get_context(account_id).await?;
-        let contact_ids = Contact::get_all(&sc, list_flags, query).await?;
+        let ctx = self.get_context(account_id).await?;
+        let contact_ids = Contact::get_all(&ctx, list_flags, query).await?;
         let mut contacts: Vec<ContactObject> = Vec::with_capacity(contact_ids.len());
         for id in contact_ids {
             contacts.push(
                 ContactObject::from_dc_contact(
-                    &sc,
-                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
+                    &ctx,
+                    deltachat::contact::Contact::get_by_id(&ctx, id).await?,
                 )
                 .await?,
             );
@@ -444,15 +442,15 @@ impl CommandApi {
         account_id: u32,
         ids: Vec<u32>,
     ) -> Result<HashMap<u32, ContactObject>> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
 
         let mut contacts = HashMap::with_capacity(ids.len());
         for id in ids {
             contacts.insert(
                 id,
                 ContactObject::from_dc_contact(
-                    &sc,
-                    deltachat::contact::Contact::get_by_id(&sc, id).await?,
+                    &ctx,
+                    deltachat::contact::Contact::get_by_id(&ctx, id).await?,
                 )
                 .await?,
             );
@@ -472,12 +470,12 @@ impl CommandApi {
         text: String,
         chat_id: u32,
     ) -> Result<u32> {
-        let sc = self.get_context(account_id).await?;
+        let ctx = self.get_context(account_id).await?;
 
         let mut msg = Message::new(Viewtype::Text);
         msg.set_text(Some(text));
 
-        let message_id = deltachat::chat::send_msg(&sc, ChatId::new(chat_id), &mut msg).await?;
+        let message_id = deltachat::chat::send_msg(&ctx, ChatId::new(chat_id), &mut msg).await?;
         Ok(message_id.to_u32())
     }
 }

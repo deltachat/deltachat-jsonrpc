@@ -20,8 +20,8 @@ export class RawClient {
   public getSystemInfo(): Promise<Record<string,string>> {
     return (this._transport.request('get_system_info', [] as RPC.Params)) as Promise<Record<string,string>>;
   }
-  public scGetProviderInfo(email: string): Promise<(T.ProviderInfo|null)> {
-    return (this._transport.request('sc_get_provider_info', [email] as RPC.Params)) as Promise<(T.ProviderInfo|null)>;
+  public getProviderInfo(accountId: T.U32, email: string): Promise<(T.ProviderInfo|null)> {
+    return (this._transport.request('get_provider_info', [accountId, email] as RPC.Params)) as Promise<(T.ProviderInfo|null)>;
   }
   public addAccount(): Promise<T.U32> {
     return (this._transport.request('add_account', [] as RPC.Params)) as Promise<T.U32>;
@@ -44,86 +44,86 @@ export class RawClient {
   public getSelectedAccountId(): Promise<(T.U32|null)> {
     return (this._transport.request('get_selected_account_id', [] as RPC.Params)) as Promise<(T.U32|null)>;
   }
-  public scIsConfigured(): Promise<boolean> {
-    return (this._transport.request('sc_is_configured', [] as RPC.Params)) as Promise<boolean>;
+  public isConfigured(accountId: T.U32): Promise<boolean> {
+    return (this._transport.request('is_configured', [accountId] as RPC.Params)) as Promise<boolean>;
   }
-  public scGetInfo(): Promise<Record<string,string>> {
-    return (this._transport.request('sc_get_info', [] as RPC.Params)) as Promise<Record<string,string>>;
+  public getInfo(accountId: T.U32): Promise<Record<string,string>> {
+    return (this._transport.request('get_info', [accountId] as RPC.Params)) as Promise<Record<string,string>>;
   }
-  public scSetConfig(key: string, value: (string|null)): Promise<null> {
-    return (this._transport.request('sc_set_config', [key, value] as RPC.Params)) as Promise<null>;
+  public setConfig(accountId: T.U32, key: string, value: (string|null)): Promise<null> {
+    return (this._transport.request('set_config', [accountId, key, value] as RPC.Params)) as Promise<null>;
   }
-  public scGetConfig(key: string): Promise<(string|null)> {
-    return (this._transport.request('sc_get_config', [key] as RPC.Params)) as Promise<(string|null)>;
+  public getConfig(accountId: T.U32, key: string): Promise<(string|null)> {
+    return (this._transport.request('get_config', [accountId, key] as RPC.Params)) as Promise<(string|null)>;
   }
-  public scBatchGetConfig(keys: (string)[]): Promise<Record<string,(string|null)>> {
-    return (this._transport.request('sc_batch_get_config', [keys] as RPC.Params)) as Promise<Record<string,(string|null)>>;
+  public batchGetConfig(accountId: T.U32, keys: (string)[]): Promise<Record<string,(string|null)>> {
+    return (this._transport.request('batch_get_config', [accountId, keys] as RPC.Params)) as Promise<Record<string,(string|null)>>;
   }
-  public scConfigure(): Promise<null> {
-    return (this._transport.request('sc_configure', [] as RPC.Params)) as Promise<null>;
+  public configure(accountId: T.U32): Promise<null> {
+    return (this._transport.request('configure', [accountId] as RPC.Params)) as Promise<null>;
   }
-  public scStopOngoingProcess(): Promise<null> {
-    return (this._transport.request('sc_stop_ongoing_process', [] as RPC.Params)) as Promise<null>;
+  public stopOngoingProcess(accountId: T.U32): Promise<null> {
+    return (this._transport.request('stop_ongoing_process', [accountId] as RPC.Params)) as Promise<null>;
   }
-  public scAutocryptInitiateKeyTransfer(): Promise<string> {
-    return (this._transport.request('sc_autocrypt_initiate_key_transfer', [] as RPC.Params)) as Promise<string>;
+  public autocryptInitiateKeyTransfer(accountId: T.U32): Promise<string> {
+    return (this._transport.request('autocrypt_initiate_key_transfer', [accountId] as RPC.Params)) as Promise<string>;
   }
-  public scAutocryptContinueKeyTransfer(messageId: T.U32, setupCode: string): Promise<null> {
-    return (this._transport.request('sc_autocrypt_continue_key_transfer', [messageId, setupCode] as RPC.Params)) as Promise<null>;
+  public autocryptContinueKeyTransfer(accountId: T.U32, messageId: T.U32, setupCode: string): Promise<null> {
+    return (this._transport.request('autocrypt_continue_key_transfer', [accountId, messageId, setupCode] as RPC.Params)) as Promise<null>;
   }
-  public scGetChatlistEntries(listFlags: T.U32, queryString: (string|null), queryContactId: (T.U32|null)): Promise<(T.ChatListEntry)[]> {
-    return (this._transport.request('sc_get_chatlist_entries', [listFlags, queryString, queryContactId] as RPC.Params)) as Promise<(T.ChatListEntry)[]>;
+  public getChatlistEntries(accountId: T.U32, listFlags: T.U32, queryString: (string|null), queryContactId: (T.U32|null)): Promise<(T.ChatListEntry)[]> {
+    return (this._transport.request('get_chatlist_entries', [accountId, listFlags, queryString, queryContactId] as RPC.Params)) as Promise<(T.ChatListEntry)[]>;
   }
-  public scGetChatlistItemsByEntries(entries: (T.ChatListEntry)[]): Promise<Record<T.U32,T.ChatListItemFetchResult>> {
-    return (this._transport.request('sc_get_chatlist_items_by_entries', [entries] as RPC.Params)) as Promise<Record<T.U32,T.ChatListItemFetchResult>>;
+  public getChatlistItemsByEntries(accountId: T.U32, entries: (T.ChatListEntry)[]): Promise<Record<T.U32,T.ChatListItemFetchResult>> {
+    return (this._transport.request('get_chatlist_items_by_entries', [accountId, entries] as RPC.Params)) as Promise<Record<T.U32,T.ChatListItemFetchResult>>;
   }
-  public scChatlistGetFullChatById(chatId: T.U32): Promise<T.FullChat> {
-    return (this._transport.request('sc_chatlist_get_full_chat_by_id', [chatId] as RPC.Params)) as Promise<T.FullChat>;
+  public chatlistGetFullChatById(accountId: T.U32, chatId: T.U32): Promise<T.FullChat> {
+    return (this._transport.request('chatlist_get_full_chat_by_id', [accountId, chatId] as RPC.Params)) as Promise<T.FullChat>;
   }
-  public scAcceptChat(chatId: T.U32): Promise<null> {
-    return (this._transport.request('sc_accept_chat', [chatId] as RPC.Params)) as Promise<null>;
+  public acceptChat(accountId: T.U32, chatId: T.U32): Promise<null> {
+    return (this._transport.request('accept_chat', [accountId, chatId] as RPC.Params)) as Promise<null>;
   }
-  public scBlockChat(chatId: T.U32): Promise<null> {
-    return (this._transport.request('sc_block_chat', [chatId] as RPC.Params)) as Promise<null>;
+  public blockChat(accountId: T.U32, chatId: T.U32): Promise<null> {
+    return (this._transport.request('block_chat', [accountId, chatId] as RPC.Params)) as Promise<null>;
   }
-  public scMessageListGetMessageIds(chatId: T.U32, flags: T.U32): Promise<(T.U32)[]> {
-    return (this._transport.request('sc_message_list_get_message_ids', [chatId, flags] as RPC.Params)) as Promise<(T.U32)[]>;
+  public messageListGetMessageIds(accountId: T.U32, chatId: T.U32, flags: T.U32): Promise<(T.U32)[]> {
+    return (this._transport.request('message_list_get_message_ids', [accountId, chatId, flags] as RPC.Params)) as Promise<(T.U32)[]>;
   }
-  public scMessageGetMessage(messageId: T.U32): Promise<T.Message> {
-    return (this._transport.request('sc_message_get_message', [messageId] as RPC.Params)) as Promise<T.Message>;
+  public messageGetMessage(accountId: T.U32, messageId: T.U32): Promise<T.Message> {
+    return (this._transport.request('message_get_message', [accountId, messageId] as RPC.Params)) as Promise<T.Message>;
   }
-  public scMessageGetMessages(messageIds: (T.U32)[]): Promise<Record<T.U32,T.Message>> {
-    return (this._transport.request('sc_message_get_messages', [messageIds] as RPC.Params)) as Promise<Record<T.U32,T.Message>>;
+  public messageGetMessages(accountId: T.U32, messageIds: (T.U32)[]): Promise<Record<T.U32,T.Message>> {
+    return (this._transport.request('message_get_messages', [accountId, messageIds] as RPC.Params)) as Promise<Record<T.U32,T.Message>>;
   }
-  public scContactsGetContact(contactId: T.U32): Promise<T.Contact> {
-    return (this._transport.request('sc_contacts_get_contact', [contactId] as RPC.Params)) as Promise<T.Contact>;
+  public contactsGetContact(accountId: T.U32, contactId: T.U32): Promise<T.Contact> {
+    return (this._transport.request('contacts_get_contact', [accountId, contactId] as RPC.Params)) as Promise<T.Contact>;
   }
-  public scContactsCreateContact(email: string, name: (string|null)): Promise<T.U32> {
-    return (this._transport.request('sc_contacts_create_contact', [email, name] as RPC.Params)) as Promise<T.U32>;
+  public contactsCreateContact(accountId: T.U32, email: string, name: (string|null)): Promise<T.U32> {
+    return (this._transport.request('contacts_create_contact', [accountId, email, name] as RPC.Params)) as Promise<T.U32>;
   }
-  public scContactsCreateChatByContactId(contactId: T.U32): Promise<T.U32> {
-    return (this._transport.request('sc_contacts_create_chat_by_contact_id', [contactId] as RPC.Params)) as Promise<T.U32>;
+  public contactsCreateChatByContactId(accountId: T.U32, contactId: T.U32): Promise<T.U32> {
+    return (this._transport.request('contacts_create_chat_by_contact_id', [accountId, contactId] as RPC.Params)) as Promise<T.U32>;
   }
-  public scContactsBlock(contactId: T.U32): Promise<null> {
-    return (this._transport.request('sc_contacts_block', [contactId] as RPC.Params)) as Promise<null>;
+  public contactsBlock(accountId: T.U32, contactId: T.U32): Promise<null> {
+    return (this._transport.request('contacts_block', [accountId, contactId] as RPC.Params)) as Promise<null>;
   }
-  public scContactsUnblock(contactId: T.U32): Promise<null> {
-    return (this._transport.request('sc_contacts_unblock', [contactId] as RPC.Params)) as Promise<null>;
+  public contactsUnblock(accountId: T.U32, contactId: T.U32): Promise<null> {
+    return (this._transport.request('contacts_unblock', [accountId, contactId] as RPC.Params)) as Promise<null>;
   }
-  public scContactsGetBlocked(): Promise<(T.Contact)[]> {
-    return (this._transport.request('sc_contacts_get_blocked', [] as RPC.Params)) as Promise<(T.Contact)[]>;
+  public contactsGetBlocked(accountId: T.U32): Promise<(T.Contact)[]> {
+    return (this._transport.request('contacts_get_blocked', [accountId] as RPC.Params)) as Promise<(T.Contact)[]>;
   }
-  public scContactsGetContactIds(listFlags: T.U32, query: (string|null)): Promise<(T.U32)[]> {
-    return (this._transport.request('sc_contacts_get_contact_ids', [listFlags, query] as RPC.Params)) as Promise<(T.U32)[]>;
+  public contactsGetContactIds(accountId: T.U32, listFlags: T.U32, query: (string|null)): Promise<(T.U32)[]> {
+    return (this._transport.request('contacts_get_contact_ids', [accountId, listFlags, query] as RPC.Params)) as Promise<(T.U32)[]>;
   }
-  public scContactsGetContacts(listFlags: T.U32, query: (string|null)): Promise<(T.Contact)[]> {
-    return (this._transport.request('sc_contacts_get_contacts', [listFlags, query] as RPC.Params)) as Promise<(T.Contact)[]>;
+  public contactsGetContacts(accountId: T.U32, listFlags: T.U32, query: (string|null)): Promise<(T.Contact)[]> {
+    return (this._transport.request('contacts_get_contacts', [accountId, listFlags, query] as RPC.Params)) as Promise<(T.Contact)[]>;
   }
-  public scContactsGetContactsByIds(ids: (T.U32)[]): Promise<Record<T.U32,T.Contact>> {
-    return (this._transport.request('sc_contacts_get_contacts_by_ids', [ids] as RPC.Params)) as Promise<Record<T.U32,T.Contact>>;
+  public contactsGetContactsByIds(accountId: T.U32, ids: (T.U32)[]): Promise<Record<T.U32,T.Contact>> {
+    return (this._transport.request('contacts_get_contacts_by_ids', [accountId, ids] as RPC.Params)) as Promise<Record<T.U32,T.Contact>>;
   }
-  public scMiscSendTextMessage(text: string, chatId: T.U32): Promise<T.U32> {
-    return (this._transport.request('sc_misc_send_text_message', [text, chatId] as RPC.Params)) as Promise<T.U32>;
+  public miscSendTextMessage(accountId: T.U32, text: string, chatId: T.U32): Promise<T.U32> {
+    return (this._transport.request('misc_send_text_message', [accountId, text, chatId] as RPC.Params)) as Promise<T.U32>;
   }
 
 }
