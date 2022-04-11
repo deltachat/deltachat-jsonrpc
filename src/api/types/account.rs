@@ -27,7 +27,7 @@ pub enum Account {
 }
 
 impl Account {
-    pub async fn from_context(id: u32, ctx: &deltachat::context::Context) -> Result<Self> {
+    pub async fn from_context(ctx: &deltachat::context::Context, id: u32) -> Result<Self> {
         if ctx.is_configured().await? {
             let display_name = ctx.get_config(Config::Displayname).await?;
             let addr = ctx.get_config(Config::Addr).await?;

@@ -25,8 +25,8 @@ pub struct ContactObject {
 
 impl ContactObject {
     pub async fn from_dc_contact(
-        contact: deltachat::contact::Contact,
         context: &Context,
+        contact: deltachat::contact::Contact,
     ) -> Result<Self> {
         let profile_image = match contact.get_profile_image(context).await? {
             Some(path_buf) => path_buf.to_str().map(|s| s.to_owned()),

@@ -38,7 +38,7 @@ pub struct FullChat {
 }
 
 impl FullChat {
-    pub async fn from_dc_chat_id(chat_id: u32, context: &Context) -> Result<Self> {
+    pub async fn from_dc_chat_id(context: &Context, chat_id: u32) -> Result<Self> {
         let rust_chat_id = ChatId::new(chat_id);
         let chat = Chat::load_from_db(context, rust_chat_id).await?;
 
@@ -49,8 +49,8 @@ impl FullChat {
         for contact_id in &contact_ids {
             contacts.push(
                 ContactObject::from_dc_contact(
-                    Contact::load_from_db(context, *contact_id).await?,
                     context,
+                    Contact::load_from_db(context, *contact_id).await?,
                 )
                 .await?,
             )
