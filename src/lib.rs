@@ -2,49 +2,63 @@ pub mod api;
 
 pub use api::events;
 
-// #[cfg(test)]
-// mod tests {
-//     use super::api::{AccountsWrapper, CommandApi};
-//     use async_std::sync::{Arc, RwLock};
-//     use deltachat::accounts::Accounts;
-//     use tempfile::TempDir;
+#[cfg(test)]
+mod tests {
+    use anyhow::Context;
+    use async_channel::unbounded;
+    use async_std::sync::{Arc, RwLock};
+    use futures::StreamExt;
+    use tempfile::TempDir;
 
-//     #[async_std::test]
-//     async fn basic_json_rpc_functionality() -> anyhow::Result<()> {
-//         // println!("{}", "");
-//         let tmp_dir = TempDir::new().unwrap().path().into();
+    use async_std::{stream, task};
+    use yerpc::{MessageHandle, RpcHandle};
 
-//         println!("tmp_dir: {:?}", tmp_dir);
+    use super::api::events::event_to_json_rpc_notification;
+    use super::api::{Accounts, CommandApi};
 
-//         // PathBuf::from("./accounts")
-//         let account_manager = AccountsWrapper {
-//             inner: Arc::new(RwLock::new(Accounts::new(tmp_dir).await?)),
-//         };
+    #[async_std::test]
+    async fn basic_json_rpc_functionality() -> anyhow::Result<()> {
+        // println!("{}", "");
+        let tmp_dir = TempDir::new().unwrap().path().into();
+        println!("tmp_dir: {:?}", tmp_dir);
 
-//         let cmd_api = CommandApi::new(account_manager);
+        let accounts = Accounts::new(tmp_dir).await?;
+        let cmd_api = CommandApi::new(accounts);
 
-//         let io = cmd_api.get_json_rpc_io();
+        let (sender, mut receiver) = unbounded::<String>();
 
-//         let request = r#"{"jsonrpc":"2.0","method":"add_account","id":1}"#;
-//         let response = r#"{"jsonrpc":"2.0","result":1,"id":1}"#;
-//         let result = io.handle_request_sync(request);
+        let (request_handle, mut rx) = RpcHandle::new();
+        let session = cmd_api;
+        let handle = MessageHandle::new(request_handle, session);
+        task::spawn({
+            async move {
+                while let Some(message) = rx.next().await {
+                    let message = serde_json::to_string(&message)?;
+                    // Abort serialization on error.
+                    sender.send(message).await?;
+                }
+                let res: Result<(), anyhow::Error> = Ok(());
+                res
+            }
+        });
 
-//         println!("{:?}", result);
-//         assert_eq!(result, Some(response.to_owned()));
+        {
+            let request = r#"{"jsonrpc":"2.0","method":"add_account","params":[],"id":1}"#;
+            let response = r#"{"jsonrpc":"2.0","id":1,"result":1}"#;
+            handle.handle_message(request).await;
+            let result = receiver.next().await;
+            println!("{:?}", result);
+            assert_eq!(result, Some(response.to_owned()));
+        }
+        {
+            let request = r#"{"jsonrpc":"2.0","method":"get_all_account_ids","params":[],"id":2}"#;
+            let response = r#"{"jsonrpc":"2.0","id":2,"result":[1]}"#;
+            handle.handle_message(request).await;
+            let result = receiver.next().await;
+            println!("{:?}", result);
+            assert_eq!(result, Some(response.to_owned()));
+        }
 
-//         let request = r#"{"jsonrpc":"2.0","method":"get_all_account_ids","id":1}"#;
-//         let response = r#"{"jsonrpc":"2.0","result":[1],"id":1}"#;
-//         let result = io.handle_request_sync(request);
-
-//         println!("{:?}", result);
-//         assert_eq!(result, Some(response.to_owned()));
-
-//         // let request =
-//         //     r#"{"jsonrpc": "2.0", "method": "say_hello", "params": { "name": "world" }, "id": 1}"#;
-//         // let response = r#"{"jsonrpc":"2.0", "result":"hello, world", "id":1 }"#;
-
-//         // assert_eq!(io.handle_request_sync(request), Some(response.to_owned()));
-
-//         Ok(())
-//     }
-// }
+        Ok(())
+    }
+}
