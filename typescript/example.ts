@@ -20,6 +20,8 @@ async function run() {
   const transport = new WebsocketClient("ws://localhost:20808/ws");
   const client = new RawClient(transport);
 
+  (window as any).client = client
+
   transport.addEventListener("request", (event: Event) => {
     const request = (event as MessageEvent<RPC.Request>).data;
     const method = request.method;
@@ -60,12 +62,12 @@ async function run() {
       return write($main, "Account is not configured");
     }
     write($main, `<h2>${info.addr!}</h2>`);
-    const chats = await client.scGetChatlistEntries(0, null, null);
+    const chats = await client.getChatlistEntries(selectedAccount, 0, null, null);
     for (const [chatId, _messageId] of chats) {
-      const chat = await client.scChatlistGetFullChatById(chatId);
+      const chat = await client.chatlistGetFullChatById(selectedAccount, chatId);
       write($main, `<h3>${chat.name}</h3>`);
-      const messageIds = await client.scMessageListGetMessageIds(chatId, 0);
-      const messages = await client.scMessageGetMessages(messageIds);
+      const messageIds = await client.messageListGetMessageIds(selectedAccount,chatId, 0);
+      const messages = await client.messageGetMessages(selectedAccount,messageIds);
       for (const [_messageId, message] of Object.entries(messages)) {
         write($main, `<p>${message.text}</p>`);
       }
