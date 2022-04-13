@@ -4,17 +4,12 @@ pub use api::events;
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Context;
+    use super::api::{Accounts, CommandApi};
     use async_channel::unbounded;
-    use async_std::sync::{Arc, RwLock};
+    use async_std::task;
     use futures::StreamExt;
     use tempfile::TempDir;
-
-    use async_std::{stream, task};
     use yerpc::{MessageHandle, RpcHandle};
-
-    use super::api::events::event_to_json_rpc_notification;
-    use super::api::{Accounts, CommandApi};
 
     #[async_std::test]
     async fn basic_json_rpc_functionality() -> anyhow::Result<()> {
