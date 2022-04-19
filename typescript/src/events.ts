@@ -32,7 +32,7 @@ export enum Event_TypeID {
 }
 
 export function eventIdToName(
-  event_id: number,
+  event_id: number
 ): keyof typeof Event_TypeID | "UNKNOWN_EVENT" {
   const name = Event_TypeID[event_id];
   if (name) {

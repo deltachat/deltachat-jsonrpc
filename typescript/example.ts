@@ -20,7 +20,7 @@ async function run() {
   const transport = new WebsocketClient("ws://localhost:20808/ws");
   const client = new RawClient(transport);
 
-  (window as any).client = client
+  (window as any).client = client;
 
   transport.on("request", (request) => {
     const method = request.method;
@@ -46,7 +46,7 @@ async function run() {
           $head,
           `<a href="#" onclick="selectDeltaAccount(${account.id})">
           ${account.addr!}
-          </a>&nbsp;`,
+          </a>&nbsp;`
         );
       }
     }
@@ -61,12 +61,27 @@ async function run() {
       return write($main, "Account is not configured");
     }
     write($main, `<h2>${info.addr!}</h2>`);
-    const chats = await client.getChatlistEntries(selectedAccount, 0, null, null);
+    const chats = await client.getChatlistEntries(
+      selectedAccount,
+      0,
+      null,
+      null
+    );
     for (const [chatId, _messageId] of chats) {
-      const chat = await client.chatlistGetFullChatById(selectedAccount, chatId);
+      const chat = await client.chatlistGetFullChatById(
+        selectedAccount,
+        chatId
+      );
       write($main, `<h3>${chat.name}</h3>`);
-      const messageIds = await client.messageListGetMessageIds(selectedAccount,chatId, 0);
-      const messages = await client.messageGetMessages(selectedAccount,messageIds);
+      const messageIds = await client.messageListGetMessageIds(
+        selectedAccount,
+        chatId,
+        0
+      );
+      const messages = await client.messageGetMessages(
+        selectedAccount,
+        messageIds
+      );
       for (const [_messageId, message] of Object.entries(messages)) {
         write($main, `<p>${message.text}</p>`);
       }
@@ -81,7 +96,7 @@ async function run() {
           [<strong>${name}</strong> on account ${event.contextId}]<br>
           <em>f1:</em> ${JSON.stringify(event.field1)}<br>
           <em>f2:</em> ${JSON.stringify(event.field2)}
-        </p>`,
+        </p>`
     );
   }
 }

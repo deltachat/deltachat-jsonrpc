@@ -32,10 +32,12 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
       RUST_LOG: "info",
     },
   });
-  let should_close = false
+  let should_close = false;
 
   server.on("exit", () => {
-    if (should_close) {return}
+    if (should_close) {
+      return;
+    }
     throw new Error("Server quit");
   });
 
@@ -45,7 +47,7 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
 
   return {
     close: async () => {
-      should_close = true
+      should_close = true;
       if (!server.kill(9)) {
         console.log("server termination failed");
       }

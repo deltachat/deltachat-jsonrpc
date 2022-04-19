@@ -12,7 +12,7 @@ import {
 
 describe("basic tests", () => {
   let server_handle: CMD_API_Server_Handle;
-  let dc: Deltachat 
+  let dc: Deltachat;
 
   before(async () => {
     server_handle = await startCMD_API_Server(CMD_API_SERVER_PORT);
@@ -28,7 +28,7 @@ describe("basic tests", () => {
   });
 
   after(async () => {
-    dc.close()
+    dc.close();
     await server_handle.close();
   });
 
@@ -117,8 +117,8 @@ describe("basic tests", () => {
       assert((await dc.rpc.getConfig(acc, "addr")) == "valid@email");
     });
     it("set invalid key should throw", async function () {
-      await expect(dc.rpc.setConfig(acc, "invalid_key", "some value")).to
-        .be.eventually.rejected;
+      await expect(dc.rpc.setConfig(acc, "invalid_key", "some value")).to.be
+        .eventually.rejected;
     });
     it("get invalid key should throw", async function () {
       await expect(dc.rpc.getConfig(acc, "invalid_key")).to.be.eventually
