@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_std::sync::{Arc, RwLock};
 use deltachat::message::MsgId;
 use deltachat::{
@@ -138,11 +138,9 @@ impl CommandApi {
 
     // ---------------------------------------------
     //
-    //     Functions for the selected Account
+    //     Functions that need an Account
     //
     // ---------------------------------------------
-
-    // TODO fn sc_send_message () -> {}
 
     async fn is_configured(&self, account_id: u32) -> Result<bool> {
         let ctx = self.get_context(account_id).await?;
@@ -156,13 +154,26 @@ impl CommandApi {
 
     async fn set_config(&self, account_id: u32, key: String, value: Option<String>) -> Result<()> {
         let ctx = self.get_context(account_id).await?;
-        let value = value.as_ref().map(String::as_ref);
-        Ok(ctx.set_config(Config::from_str(&key)?, value).await?)
+        set_config(&ctx, &key, value.as_deref()).await
+    }
+
+    async fn batch_set_config(
+        &self,
+        account_id: u32,
+        config: HashMap<String, Option<String>>,
+    ) -> Result<()> {
+        let ctx = self.get_context(account_id).await?;
+        for (key, value) in config.into_iter() {
+            set_config(&ctx, &key, value.as_deref())
+                .await
+                .with_context(|| format!("Can't set {} to {:?}", key, value))?;
+        }
+        Ok(())
     }
 
     async fn get_config(&self, account_id: u32, key: String) -> Result<Option<String>> {
         let ctx = self.get_context(account_id).await?;
-        Ok(ctx.get_config(Config::from_str(&key)?).await?)
+        get_config(&ctx, &key).await
     }
 
     async fn batch_get_config(
@@ -173,7 +184,7 @@ impl CommandApi {
         let ctx = self.get_context(account_id).await?;
         let mut result: HashMap<String, Option<String>> = HashMap::new();
         for key in keys {
-            result.insert(key.clone(), ctx.get_config(Config::from_str(&key)?).await?);
+            result.insert(key.clone(), get_config(&ctx, &key).await?);
         }
         Ok(result)
     }
@@ -477,5 +488,31 @@ impl CommandApi {
 
         let message_id = deltachat::chat::send_msg(&ctx, ChatId::new(chat_id), &mut msg).await?;
         Ok(message_id.to_u32())
+    }
+}
+
+// Helper functions (to prevent code duplication)
+async fn set_config(
+    ctx: &deltachat::context::Context,
+    key: &str,
+    value: Option<&str>,
+) -> Result<(), anyhow::Error> {
+    if key.starts_with("ui.") {
+        ctx.set_ui_config(key, value).await
+    } else {
+        ctx.set_config(Config::from_str(key).context("unknown key")?, value)
+            .await
+    }
+}
+
+async fn get_config(
+    ctx: &deltachat::context::Context,
+    key: &str,
+) -> Result<Option<String>, anyhow::Error> {
+    if key.starts_with("ui.") {
+        ctx.get_ui_config(key).await
+    } else {
+        ctx.get_config(Config::from_str(key).context("unknown key")?)
+            .await
     }
 }

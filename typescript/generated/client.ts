@@ -53,6 +53,9 @@ export class RawClient {
   public setConfig(accountId: T.U32, key: string, value: (string|null)): Promise<null> {
     return (this._transport.request('set_config', [accountId, key, value] as RPC.Params)) as Promise<null>;
   }
+  public batchSetConfig(accountId: T.U32, config: Record<string,(string|null)>): Promise<null> {
+    return (this._transport.request('batch_set_config', [accountId, config] as RPC.Params)) as Promise<null>;
+  }
   public getConfig(accountId: T.U32, key: string): Promise<(string|null)> {
     return (this._transport.request('get_config', [accountId, key] as RPC.Params)) as Promise<(string|null)>;
   }

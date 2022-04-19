@@ -22,8 +22,7 @@ async function run() {
 
   (window as any).client = client
 
-  transport.addEventListener("request", (event: Event) => {
-    const request = (event as MessageEvent<RPC.Request>).data;
+  transport.on("request", (request) => {
     const method = request.method;
     if (method === "event") {
       const params = request.params! as DeltaEvent;

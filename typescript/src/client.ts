@@ -1,44 +1,39 @@
 import * as T from "../generated/types.js";
 import * as RPC from "../generated/jsonrpc.js";
 import { RawClient } from "../generated/client.js";
-import { WebsocketClient } from "yerpc";
+import { WebsocketClient, ClientHandler as yerpcClientHandler } from "yerpc";
 import { eventIdToName } from "./events.js";
+import { TinyEmitter } from "tiny-emitter";
 
-export type Opts = {
-  url: string;
-};
-
-export const DEFAULT_OPTS: Opts = {
-  url: "ws://localhost:20808/ws",
-};
+type event_names = ReturnType<typeof eventIdToName> | "ALL";
 
 type WireEvent = { id: number; contextId: number; field1: any; field2: any };
-export type DeltachatEventData = WireEvent & { name: string };
-export type DeltachatEvent = MessageEvent<DeltachatEventData>;
+export type DeltachatEvent = WireEvent & { name: event_names };
 
-export class Deltachat extends EventTarget {
+type events = Record<event_names, (event: DeltachatEvent) => void>;
+
+export class ModularDeltachat<
+  Transport extends yerpcClientHandler
+> extends TinyEmitter<events> {
   rpc: RawClient;
-  opts: Opts;
-  transport: WebsocketClient;
   account?: T.Account;
-  constructor(opts: Opts | string | undefined) {
+  constructor(protected transport: Transport) {
     super();
-    if (typeof opts === "string") opts = { url: opts };
-    if (opts) this.opts = { ...DEFAULT_OPTS, ...opts };
-    else this.opts = { ...DEFAULT_OPTS };
-
-    this.transport = new WebsocketClient(this.opts.url);
     this.rpc = new RawClient(this.transport);
 
-    this.transport.addEventListener("request", (event: Event) => {
-      const request = (event as MessageEvent<RPC.Request>).data;
+    this.transport.on("request", (request) => {
       const method = request.method;
       if (method === "event") {
         const params = request.params! as WireEvent;
         const name = eventIdToName(params.id);
-        const data: DeltachatEventData = { ...params, name };
-        const event = new MessageEvent<DeltachatEventData>("event", { data });
-        this.dispatchEvent(event);
+        const event = { name, ...params };
+        this.emit(name, event);
+        this.emit("ALL", event);
+
+        if (this.contextEmitters[params.contextId]) {
+          this.contextEmitters[params.contextId].emit(name, event);
+          this.contextEmitters[params.contextId].emit("ALL", event);
+        }
       }
     });
   }
@@ -50,5 +45,37 @@ export class Deltachat extends EventTarget {
 
   async listAccounts(): Promise<T.Account[]> {
     return await this.rpc.getAllAccounts();
+  }
+
+  private contextEmitters: TinyEmitter<events>[] = [];
+  getContextEvents(account_id: number) {
+    if (this.contextEmitters[account_id]) {
+      return this.contextEmitters[account_id];
+    } else {
+      this.contextEmitters[account_id] = new TinyEmitter();
+      return this.contextEmitters[account_id];
+    }
+  }
+}
+
+export type Opts = {
+  url: string;
+};
+
+export const DEFAULT_OPTS: Opts = {
+  url: "ws://localhost:20808/ws",
+};
+export class Deltachat extends ModularDeltachat<WebsocketClient> {
+  opts: Opts;
+  close() {
+    this.transport._socket.close();
+  }
+  constructor(opts: Opts | string | undefined) {
+    if (typeof opts === "string") opts = { url: opts };
+    if (opts) opts = { ...DEFAULT_OPTS, ...opts };
+    else opts = { ...DEFAULT_OPTS };
+
+    super(new WebsocketClient(opts.url));
+    this.opts = opts;
   }
 }

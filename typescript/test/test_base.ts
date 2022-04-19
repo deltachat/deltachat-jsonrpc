@@ -3,9 +3,14 @@ import { join } from "path";
 import { mkdtemp, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { spawn } from "child_process";
-import { unwrapPromise } from "./ts_helpers";
+import { unwrapPromise } from "./ts_helpers.js";
 import fetch from "node-fetch";
 /* port is not configurable yet */
+
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const CMD_API_SERVER_PORT = 20808;
 export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
@@ -17,7 +22,7 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
     throw new Error(
       "server executable does not exist, you need to build it first" +
         "\nserver executable not found at " +
-        path_of_server,
+        path_of_server
     );
   }
 
@@ -27,11 +32,20 @@ export async function startCMD_API_Server(port: typeof CMD_API_SERVER_PORT) {
       RUST_LOG: "info",
     },
   });
+  let should_close = false
 
-  //server.stderr.pipe(process.stderr)
+  server.on("exit", () => {
+    if (should_close) {return}
+    throw new Error("Server quit");
+  });
+
+  server.stderr.pipe(process.stderr);
+
+  //server.stdout.pipe(process.stdout)
 
   return {
     close: async () => {
+      should_close = true
       if (!server.kill(9)) {
         console.log("server termination failed");
       }

@@ -12,14 +12,18 @@
     "generate-bindings": "cargo test",
     "example:build": "tsc && esbuild --bundle dist/example.js --outfile=dist/example.bundle.js",
     "example:dev": "esbuild example.ts --bundle --outdir=dist --servedir=.",
-    "coverage": "npx tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs"
+    "coverage": "npx tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs",
+    "test": "npm run bundle && npm run coverage"
   },
   "dependencies": {
+    "chai-as-promised": "^7.1.1",
     "isomorphic-ws": "^4.0.1",
-    "yerpc": "^0.1.0"
+    "tiny-emitter": "git+https://github.com/Simon-Laux/tiny-emitter.git",
+    "yerpc": "../../yerpc"
   },
   "devDependencies": {
     "@types/chai": "^4.2.21",
+    "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^9.0.0",
     "@types/node-fetch": "^2.5.7",
     "@types/ws": "^7.2.4",
@@ -29,6 +33,6 @@
     "mocha": "^9.1.1",
     "node-fetch": "^2.6.1",
     "typescript": "^4.5.5",
-    "ws": "^8.2.2"
+    "ws": "^8.5.0"
   }
 }
