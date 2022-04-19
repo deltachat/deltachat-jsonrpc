@@ -7,21 +7,24 @@
   "author": "Delta Chat Developers (ML) <delta@codespeak.net>",
   "license": "MPL-2.0",
   "scripts": {
-    "build": "tsc",
-    "bundle": "npm run generate-bindings && tsc && esbuild --bundle dist/deltachat.js --outfile=dist/deltachat.bundle.js",
+    "prettier:check": "prettier --check *",
+    "prettier:fix": "prettier --write *",
+    "build": "npm run generate-bindings && tsc",
+    "bundle": "npm run build && esbuild --bundle dist/deltachat.js --outfile=dist/deltachat.bundle.js",
     "generate-bindings": "cargo test",
     "example:build": "tsc && esbuild --bundle dist/example.js --outfile=dist/example.bundle.js",
     "example:dev": "esbuild example.ts --bundle --outdir=dist --servedir=.",
-    "coverage": "npx tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs",
-    "test": "npm run bundle && npm run coverage"
+    "coverage": "tsc -b test && COVERAGE=1 c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs",
+    "test": "npm run build && npm run coverage && npm run prettier:check"
   },
   "dependencies": {
-    "chai-as-promised": "^7.1.1",
     "isomorphic-ws": "^4.0.1",
     "tiny-emitter": "git+https://github.com/Simon-Laux/tiny-emitter.git",
     "yerpc": "../../yerpc"
   },
   "devDependencies": {
+    "prettier": "^2.6.2",
+    "chai-as-promised": "^7.1.1",
     "@types/chai": "^4.2.21",
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^9.0.0",
