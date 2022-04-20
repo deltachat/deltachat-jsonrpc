@@ -28,7 +28,7 @@ describe("basic tests", () => {
   });
 
   after(async () => {
-    dc.close();
+    dc && dc.close();
     await server_handle.close();
   });
 
