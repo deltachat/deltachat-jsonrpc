@@ -231,14 +231,14 @@ impl CommandApi {
     async fn get_chatlist_entries(
         &self,
         account_id: u32,
-        list_flags: u32,
+        list_flags: Option<u32>,
         query_string: Option<String>,
         query_contact_id: Option<u32>,
     ) -> Result<Vec<ChatListEntry>> {
         let ctx = self.get_context(account_id).await?;
         let list = Chatlist::try_load(
             &ctx,
-            list_flags as usize,
+            list_flags.unwrap_or(0) as usize,
             query_string.as_deref(),
             query_contact_id,
         )

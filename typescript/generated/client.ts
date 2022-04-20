@@ -74,7 +74,7 @@ export class RawClient {
   public autocryptContinueKeyTransfer(accountId: T.U32, messageId: T.U32, setupCode: string): Promise<null> {
     return (this._transport.request('autocrypt_continue_key_transfer', [accountId, messageId, setupCode] as RPC.Params)) as Promise<null>;
   }
-  public getChatlistEntries(accountId: T.U32, listFlags: T.U32, queryString: (string|null), queryContactId: (T.U32|null)): Promise<(T.ChatListEntry)[]> {
+  public getChatlistEntries(accountId: T.U32, listFlags: (T.U32|null), queryString: (string|null), queryContactId: (T.U32|null)): Promise<(T.ChatListEntry)[]> {
     return (this._transport.request('get_chatlist_entries', [accountId, listFlags, queryString, queryContactId] as RPC.Params)) as Promise<(T.ChatListEntry)[]>;
   }
   public getChatlistItemsByEntries(accountId: T.U32, entries: (T.ChatListEntry)[]): Promise<Record<T.U32,T.ChatListItemFetchResult>> {
