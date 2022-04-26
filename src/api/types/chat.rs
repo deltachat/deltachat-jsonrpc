@@ -1,17 +1,14 @@
+use anyhow::{anyhow, Result};
 use deltachat::chat::get_chat_contacts;
 use deltachat::chat::{Chat, ChatId};
-use deltachat::contact::{Contact,ContactId};
+use deltachat::contact::{Contact, ContactId};
 use deltachat::context::Context;
-
 use num_traits::cast::ToPrimitive;
-
-use anyhow::{anyhow, Result};
-
 use serde::Serialize;
+use typescript_type_def::TypeDef;
 
 use super::color_int_to_hex_string;
 use super::contact::ContactObject;
-use typescript_type_def::TypeDef;
 
 #[derive(Serialize, TypeDef)]
 pub struct FullChat {
@@ -80,7 +77,7 @@ impl FullChat {
             is_unpromoted: chat.is_unpromoted(),
             is_self_talk: chat.is_self_talk(),
             contacts,
-            contact_ids: contact_ids.iter().map(|id|id.to_u32()).collect(),
+            contact_ids: contact_ids.iter().map(|id| id.to_u32()).collect(),
             color,
             fresh_message_counter,
             is_contact_request: chat.is_contact_request(),
@@ -88,7 +85,7 @@ impl FullChat {
             self_in_group: contact_ids.contains(&ContactId::SELF),
             is_muted: chat.is_muted(),
             ephemeral_timer,
-            can_send
+            can_send,
         })
     }
 }

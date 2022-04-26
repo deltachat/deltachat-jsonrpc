@@ -1,3 +1,4 @@
+use anyhow::Result;
 use deltachat::constants::*;
 use deltachat::contact::ContactId;
 use deltachat::{
@@ -8,15 +9,11 @@ use deltachat::{
     chat::{Chat, ChatId},
     message::MsgId,
 };
-
 use num_traits::cast::ToPrimitive;
-
-use anyhow::Result;
-
 use serde::{Deserialize, Serialize};
+use typescript_type_def::TypeDef;
 
 use super::color_int_to_hex_string;
-use typescript_type_def::TypeDef;
 
 #[derive(Deserialize, Serialize, TypeDef)]
 pub struct ChatListEntry(pub u32, pub u32);

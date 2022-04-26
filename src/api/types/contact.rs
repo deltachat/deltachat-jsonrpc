@@ -1,11 +1,10 @@
+use anyhow::Result;
 use deltachat::contact::VerifiedStatus;
 use deltachat::context::Context;
-
-use anyhow::Result;
-
-use super::color_int_to_hex_string;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
+
+use super::color_int_to_hex_string;
 
 #[derive(Serialize, TypeDef)]
 #[serde(rename = "Contact")]

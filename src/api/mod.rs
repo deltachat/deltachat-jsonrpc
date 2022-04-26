@@ -54,19 +54,86 @@ impl CommandApi {
 #[rpc(all_positional, ts_outdir = "typescript/generated")]
 impl CommandApi {
     // ---------------------------------------------
-    //
-    //       Misc context independent methods
-    //
+    //  Misc top level functions
     // ---------------------------------------------
+
+    // Check if an email address is valid.
     async fn check_email_validity(&self, email: String) -> bool {
         may_be_valid_addr(&email)
     }
 
-    /// get general info, even if no context is selected
+    /// Get general system info.
     async fn get_system_info(&self) -> BTreeMap<&'static str, String> {
         get_info()
     }
 
+    // ---------------------------------------------
+    // Account Management
+    // ---------------------------------------------
+
+    async fn add_account(&self) -> Result<u32> {
+        self.accounts.write().await.add_account().await
+    }
+
+    async fn remove_account(&self, account_id: u32) -> Result<()> {
+        self.accounts.write().await.remove_account(account_id).await
+    }
+
+    async fn get_all_account_ids(&self) -> Vec<u32> {
+        self.accounts.read().await.get_all().await
+    }
+
+    /// Select account id for internally selected state.
+    /// TODO: Likely this is deprecated as all methods take an account id now.
+    async fn select_account(&self, id: u32) -> Result<()> {
+        self.accounts.write().await.select_account(id).await
+    }
+
+    /// Get the selected account id of the internal state..
+    /// TODO: Likely this is deprecated as all methods take an account id now.
+    async fn get_selected_account_id(&self) -> Option<u32> {
+        self.accounts.read().await.get_selected_account_id().await
+    }
+
+    /// Get a list of all configured accounts.
+    async fn get_all_accounts(&self) -> Result<Vec<Account>> {
+        let mut accounts = Vec::new();
+        for id in self.accounts.read().await.get_all().await {
+            let context_option = self.accounts.read().await.get_account(id).await;
+            if let Some(ctx) = context_option {
+                accounts.push(Account::from_context(&ctx, id).await?)
+            } else {
+                println!("account with id {} doesn't exist anymore", id);
+            }
+        }
+        Ok(accounts)
+    }
+
+    // ---------------------------------------------
+    // Methods that work on individual accounts
+    // ---------------------------------------------
+
+    /// Get top-level info for an account.
+    async fn get_account_info(&self, account_id: u32) -> Result<Account> {
+        let context_option = self.accounts.read().await.get_account(account_id).await;
+        if let Some(ctx) = context_option {
+            Ok(Account::from_context(&ctx, account_id).await?)
+        } else {
+            Err(anyhow!(
+                "account with id {} doesn't exist anymore",
+                account_id
+            ))
+        }
+    }
+
+    /// Returns provider for the given domain.
+    ///
+    /// This function looks up domain in offline database first. If not
+    /// found, it queries MX record for the domain and looks up offline
+    /// database for MX domains.
+    ///
+    /// For compatibility, email address can be passed to this function
+    /// instead of the domain.
     async fn get_provider_info(
         &self,
         account_id: u32,
@@ -83,68 +150,13 @@ impl CommandApi {
         Ok(ProviderInfo::from_dc_type(provider_info))
     }
 
-    // ---------------------------------------------
-    //
-    //              Account Management
-    //
-    // ---------------------------------------------
-
-    async fn add_account(&self) -> Result<u32> {
-        self.accounts.write().await.add_account().await
-    }
-
-    async fn remove_account(&self, account_id: u32) -> Result<()> {
-        self.accounts.write().await.remove_account(account_id).await
-    }
-
-    async fn get_all_account_ids(&self) -> Vec<u32> {
-        self.accounts.read().await.get_all().await
-    }
-
-    async fn get_account_info(&self, account_id: u32) -> Result<Account> {
-        let context_option = self.accounts.read().await.get_account(account_id).await;
-        if let Some(ctx) = context_option {
-            Ok(Account::from_context(&ctx, account_id).await?)
-        } else {
-            Err(anyhow!(
-                "account with id {} doesn't exist anymore",
-                account_id
-            ))
-        }
-    }
-
-    async fn get_all_accounts(&self) -> Result<Vec<Account>> {
-        let mut accounts = Vec::new();
-        for id in self.accounts.read().await.get_all().await {
-            let context_option = self.accounts.read().await.get_account(id).await;
-            if let Some(ctx) = context_option {
-                accounts.push(Account::from_context(&ctx, id).await?)
-            } else {
-                println!("account with id {} doesn't exist anymore", id);
-            }
-        }
-        Ok(accounts)
-    }
-
-    async fn select_account(&self, id: u32) -> Result<()> {
-        self.accounts.write().await.select_account(id).await
-    }
-
-    async fn get_selected_account_id(&self) -> Option<u32> {
-        self.accounts.read().await.get_selected_account_id().await
-    }
-
-    // ---------------------------------------------
-    //
-    //     Functions that need an Account
-    //
-    // ---------------------------------------------
-
+    /// Checks if the context is already configured.
     async fn is_configured(&self, account_id: u32) -> Result<bool> {
         let ctx = self.get_context(account_id).await?;
         Ok(ctx.is_configured().await?)
     }
 
+    // Get system info for an account.
     async fn get_info(&self, account_id: u32) -> Result<BTreeMap<&'static str, String>> {
         let ctx = self.get_context(account_id).await?;
         Ok(ctx.get_info().await?)
@@ -187,7 +199,8 @@ impl CommandApi {
         Ok(result)
     }
 
-    /// set config for the credentials before calling this
+    /// Configures this account with the currently set parameters.
+    /// Setup the credential config before calling this.
     async fn configure(&self, account_id: u32) -> Result<()> {
         let ctx = self.get_context(account_id).await?;
         ctx.stop_io().await;
@@ -204,7 +217,7 @@ impl CommandApi {
     }
 
     // ---------------------------------------------
-    //                  autocrypt
+    //  autocrypt
     // ---------------------------------------------
 
     async fn autocrypt_initiate_key_transfer(&self, account_id: u32) -> Result<String> {
@@ -223,7 +236,7 @@ impl CommandApi {
     }
 
     // ---------------------------------------------
-    //                  Chat List
+    //   chat list
     // ---------------------------------------------
 
     async fn get_chatlist_entries(
@@ -275,7 +288,7 @@ impl CommandApi {
     }
 
     // ---------------------------------------------
-    //                    Chat
+    //  chat
     // ---------------------------------------------
 
     async fn chatlist_get_full_chat_by_id(
@@ -298,7 +311,7 @@ impl CommandApi {
     }
 
     // ---------------------------------------------
-    //                Message List
+    // message list
     // ---------------------------------------------
 
     async fn message_list_get_message_ids(
@@ -340,9 +353,10 @@ impl CommandApi {
     }
 
     // ---------------------------------------------
-    //                   Contact
+    //  contact
     // ---------------------------------------------
 
+    /// Get a single contact options by ID.
     async fn contacts_get_contact(
         &self,
         account_id: u32,
@@ -427,7 +441,8 @@ impl CommandApi {
         Ok(contacts.into_iter().map(|c| c.to_u32()).collect())
     }
 
-    // formerly called getContacts2 in desktop
+    /// Get a list of contacts.
+    /// (formerly called getContacts2 in desktop)
     async fn contacts_get_contacts(
         &self,
         account_id: u32,

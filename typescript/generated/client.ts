@@ -20,15 +20,10 @@ export class RawClient {
   }
 
   /**
-   * get general info, even if no context is selected
+   * Get general system info.
    */
   public getSystemInfo(): Promise<Record<string,string>> {
     return (this._transport.request('get_system_info', [] as RPC.Params)) as Promise<Record<string,string>>;
-  }
-
-
-  public getProviderInfo(accountId: T.U32, email: string): Promise<(T.ProviderInfo|null)> {
-    return (this._transport.request('get_provider_info', [accountId, email] as RPC.Params)) as Promise<(T.ProviderInfo|null)>;
   }
 
 
@@ -46,27 +41,53 @@ export class RawClient {
     return (this._transport.request('get_all_account_ids', [] as RPC.Params)) as Promise<(T.U32)[]>;
   }
 
-
-  public getAccountInfo(accountId: T.U32): Promise<T.Account> {
-    return (this._transport.request('get_account_info', [accountId] as RPC.Params)) as Promise<T.Account>;
-  }
-
-
-  public getAllAccounts(): Promise<(T.Account)[]> {
-    return (this._transport.request('get_all_accounts', [] as RPC.Params)) as Promise<(T.Account)[]>;
-  }
-
-
+  /**
+   * Select account id for internally selected state.
+   * TODO: Likely this is deprecated as all methods take an account id now.
+   */
   public selectAccount(id: T.U32): Promise<null> {
     return (this._transport.request('select_account', [id] as RPC.Params)) as Promise<null>;
   }
 
-
+  /**
+   * Get the selected account id of the internal state..
+   * TODO: Likely this is deprecated as all methods take an account id now.
+   */
   public getSelectedAccountId(): Promise<(T.U32|null)> {
     return (this._transport.request('get_selected_account_id', [] as RPC.Params)) as Promise<(T.U32|null)>;
   }
 
+  /**
+   * Get a list of all configured accounts.
+   */
+  public getAllAccounts(): Promise<(T.Account)[]> {
+    return (this._transport.request('get_all_accounts', [] as RPC.Params)) as Promise<(T.Account)[]>;
+  }
 
+  /**
+   * Get top-level info for an account.
+   */
+  public getAccountInfo(accountId: T.U32): Promise<T.Account> {
+    return (this._transport.request('get_account_info', [accountId] as RPC.Params)) as Promise<T.Account>;
+  }
+
+  /**
+   * Returns provider for the given domain.
+   *
+   * This function looks up domain in offline database first. If not
+   * found, it queries MX record for the domain and looks up offline
+   * database for MX domains.
+   *
+   * For compatibility, email address can be passed to this function
+   * instead of the domain.
+   */
+  public getProviderInfo(accountId: T.U32, email: string): Promise<(T.ProviderInfo|null)> {
+    return (this._transport.request('get_provider_info', [accountId, email] as RPC.Params)) as Promise<(T.ProviderInfo|null)>;
+  }
+
+  /**
+   * Checks if the context is already configured.
+   */
   public isConfigured(accountId: T.U32): Promise<boolean> {
     return (this._transport.request('is_configured', [accountId] as RPC.Params)) as Promise<boolean>;
   }
@@ -97,7 +118,8 @@ export class RawClient {
   }
 
   /**
-   * set config for the credentials before calling this
+   * Configures this account with the currently set parameters.
+   * Setup the credential config before calling this.
    */
   public configure(accountId: T.U32): Promise<null> {
     return (this._transport.request('configure', [accountId] as RPC.Params)) as Promise<null>;
@@ -160,7 +182,9 @@ export class RawClient {
     return (this._transport.request('message_get_messages', [accountId, messageIds] as RPC.Params)) as Promise<Record<T.U32,T.Message>>;
   }
 
-
+  /**
+   * Get a single contact options by ID.
+   */
   public contactsGetContact(accountId: T.U32, contactId: T.U32): Promise<T.Contact> {
     return (this._transport.request('contacts_get_contact', [accountId, contactId] as RPC.Params)) as Promise<T.Contact>;
   }
@@ -201,7 +225,10 @@ export class RawClient {
     return (this._transport.request('contacts_get_contact_ids', [accountId, listFlags, query] as RPC.Params)) as Promise<(T.U32)[]>;
   }
 
-
+  /**
+   * Get a list of contacts.
+   * (formerly called getContacts2 in desktop)
+   */
   public contactsGetContacts(accountId: T.U32, listFlags: T.U32, query: (string|null)): Promise<(T.Contact)[]> {
     return (this._transport.request('contacts_get_contacts', [accountId, listFlags, query] as RPC.Params)) as Promise<(T.Contact)[]>;
   }

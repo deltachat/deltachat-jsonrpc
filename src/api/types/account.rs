@@ -1,12 +1,10 @@
+use anyhow::Result;
 use deltachat::config::Config;
 use deltachat::contact::{Contact, ContactId};
-
-use anyhow::Result;
-
-use super::color_int_to_hex_string;
-
 use serde::Serialize;
 use typescript_type_def::TypeDef;
+
+use super::color_int_to_hex_string;
 
 #[derive(Serialize, TypeDef)]
 #[serde(tag = "type")]
@@ -32,9 +30,7 @@ impl Account {
             let addr = ctx.get_config(Config::Addr).await?;
             let profile_image = ctx.get_config(Config::Selfavatar).await?;
             let color = color_int_to_hex_string(
-                Contact::get_by_id(ctx, ContactId::SELF)
-                    .await?
-                    .get_color(),
+                Contact::get_by_id(ctx, ContactId::SELF).await?.get_color(),
             );
             Ok(Account::Configured {
                 id,

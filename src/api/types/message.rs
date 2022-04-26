@@ -1,11 +1,9 @@
+use anyhow::{anyhow, Result};
 use deltachat::contact::Contact;
 use deltachat::context::Context;
 use deltachat::message::Message;
 use deltachat::message::MsgId;
 use num_traits::cast::ToPrimitive;
-
-use anyhow::{anyhow, Result};
-
 use serde::Serialize;
 use typescript_type_def::TypeDef;
 

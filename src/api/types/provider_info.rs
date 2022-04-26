@@ -1,5 +1,4 @@
 use deltachat::provider::Provider;
-
 use num_traits::cast::ToPrimitive;
 use serde::Serialize;
 use typescript_type_def::TypeDef;
