@@ -1,5 +1,10 @@
 import { assert, expect } from "chai";
-import { Deltachat, DeltachatEvent, eventIdToName, Event_TypeID } from "../dist/deltachat.js";
+import {
+  Deltachat,
+  DeltachatEvent,
+  eventIdToName,
+  Event_TypeID,
+} from "../dist/deltachat.js";
 import {
   CMD_API_Server_Handle,
   CMD_API_SERVER_PORT,

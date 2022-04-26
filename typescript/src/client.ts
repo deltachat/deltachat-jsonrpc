@@ -6,11 +6,18 @@ import { eventIdToName } from "./events.js";
 import { TinyEmitter } from "tiny-emitter";
 
 export type EventNames = ReturnType<typeof eventIdToName> | "ALL";
-export type WireEvent = { id: number; contextId: number; field1: any; field2: any };
+export type WireEvent = {
+  id: number;
+  contextId: number;
+  field1: any;
+  field2: any;
+};
 export type DeltachatEvent = WireEvent & { name: EventNames };
 export type Events = Record<EventNames, (event: DeltachatEvent) => void>;
 
-export class BaseDeltachat<Transport extends BaseTransport> extends TinyEmitter<Events> {
+export class BaseDeltachat<
+  Transport extends BaseTransport
+> extends TinyEmitter<Events> {
   rpc: RawClient;
   account?: T.Account;
   constructor(protected transport: Transport) {

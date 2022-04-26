@@ -7,8 +7,8 @@
   "author": "Delta Chat Developers (ML) <delta@codespeak.net>",
   "license": "MPL-2.0",
   "scripts": {
-    "prettier:check": "prettier --check *",
-    "prettier:fix": "prettier --write *",
+    "prettier:check": "prettier --check **.ts",
+    "prettier:fix": "prettier --write **.ts",
     "build": "npm run generate-bindings && tsc",
     "bundle": "npm run build && esbuild --bundle dist/deltachat.js --outfile=dist/deltachat.bundle.js",
     "generate-bindings": "cargo test",
