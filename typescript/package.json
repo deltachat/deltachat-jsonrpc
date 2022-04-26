@@ -15,12 +15,12 @@
     "example:build": "tsc && esbuild --bundle dist/example.js --outfile=dist/example.bundle.js",
     "example:dev": "esbuild example.ts --bundle --outdir=dist --servedir=.",
     "coverage": "tsc -b test && COVERAGE=1 NODE_OPTIONS=--enable-source-maps c8 --include \"dist/*\" -r text -r html -r json mocha test_dist && node report_api_coverage.mjs",
-    "test": "npm run build && npm run coverage && npm run prettier:check"
+    "test": "rm -rf dist && npm run build && npm run coverage && npm run prettier:check"
   },
   "dependencies": {
     "isomorphic-ws": "^4.0.1",
     "tiny-emitter": "git+https://github.com/Simon-Laux/tiny-emitter.git",
-    "yerpc": "../../yerpc"
+    "yerpc": "^0.2.3"
   },
   "devDependencies": {
     "prettier": "^2.6.2",

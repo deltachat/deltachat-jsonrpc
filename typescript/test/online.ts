@@ -1,6 +1,5 @@
 import { assert, expect } from "chai";
-import { Deltachat, DeltachatEvent } from "../dist/deltachat.js";
-import { Event_TypeID, get_event_name_from_id } from "../dist/events.js";
+import { Deltachat, DeltachatEvent, eventIdToName, Event_TypeID } from "../dist/deltachat.js";
 import {
   CMD_API_Server_Handle,
   CMD_API_SERVER_PORT,
@@ -170,7 +169,7 @@ type event_data = {
 };
 async function waitForEvent(
   dc: Deltachat,
-  event: ReturnType<typeof get_event_name_from_id>,
+  event: ReturnType<typeof eventIdToName>,
   accountId: number
 ): Promise<event_data> {
   return new Promise((res, rej) => {

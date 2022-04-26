@@ -3,3 +3,4 @@ export * as T from "../generated/types.js";
 export { RawClient } from "../generated/client.js";
 export * from "./client.js";
 export * as yerpc from "yerpc";
+export * from "./events.js"

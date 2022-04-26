@@ -1,6 +1,6 @@
 import { RawClient, RPC } from "./src/lib";
 import { eventIdToName } from "./src/events";
-import { WebsocketClient } from "yerpc";
+import { WebsocketTransport, Request } from "yerpc";
 
 type DeltaEvent = { id: number; contextId: number; field1: any; field2: any };
 var selectedAccount = 0;
@@ -17,12 +17,12 @@ async function run() {
   const $side = document.getElementById("side")!;
   const $head = document.getElementById("header")!;
 
-  const transport = new WebsocketClient("ws://localhost:20808/ws");
+  const transport = new WebsocketTransport("ws://localhost:20808/ws");
   const client = new RawClient(transport);
 
   (window as any).client = client;
 
-  transport.on("request", (request) => {
+  transport.on("request", (request: Request) => {
     const method = request.method;
     if (method === "event") {
       const params = request.params! as DeltaEvent;
