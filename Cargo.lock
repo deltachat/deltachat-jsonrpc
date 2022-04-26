@@ -972,6 +972,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "darling"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1a5d2e8b5a94b2261efb20e99a01255b9c5293797d69bbf04600567b2f9b8d7"
+dependencies = [
+ "darling_core 0.14.0",
+ "darling_macro 0.14.0",
+]
+
+[[package]]
 name = "darling_core"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1000,6 +1010,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "darling_core"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f1c7d56716be82d9c6adb967cfe700955179ea88806e898483dad6987330a54"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim 0.10.0",
+ "syn",
+]
+
+[[package]]
 name = "darling_macro"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1017,6 +1041,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c972679f83bdf9c42bd905396b6c3588a843a17f0f16dfcfa3e2c5d57441835"
 dependencies = [
  "darling_core 0.13.4",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64dd7e5a75a00cb6799ae9fbbfc3bba0134def6579a9e27564e72c839c837bed"
+dependencies = [
+ "darling_core 0.14.0",
  "quote",
  "syn",
 ]
@@ -2261,9 +2296,9 @@ dependencies = [
 
 [[package]]
 name = "num-iter"
-version = "0.1.42"
+version = "0.1.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2021c8337a54d21aca0d59a92577a029af9431cb59b909b03252b9c164fad59"
+checksum = "7d03e6c028c5dc5cac6e2dec0efda81fc887605bb3d884578bb6d6bf7514e252"
 dependencies = [
  "autocfg 1.1.0",
  "num-integer",
@@ -3648,8 +3683,9 @@ checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "typescript-type-def"
-version = "0.3.1"
-source = "git+https://github.com/Frando/rust-typescript-type-def.git?branch=delta#f70df07cc7e7fbf9049b2d02d23b16ebd635d0e5"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd93d9ce46b1c18ad201d6a9cbb74365e6fbd299eeb0e13499b5b6b7e5b63f47"
 dependencies = [
  "serde_json",
  "typescript-type-def-derive",
@@ -3657,8 +3693,9 @@ dependencies = [
 
 [[package]]
 name = "typescript-type-def-derive"
-version = "0.3.1"
-source = "git+https://github.com/Frando/rust-typescript-type-def.git?branch=delta#f70df07cc7e7fbf9049b2d02d23b16ebd635d0e5"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9353c666b254b4c3441020e9e953d16106963ca728cf880884732d0c294e4f4a"
 dependencies = [
  "darling 0.13.4",
  "ident_case",
@@ -4013,7 +4050,7 @@ dependencies = [
 [[package]]
 name = "yerpc"
 version = "0.1.0"
-source = "git+https://github.com/Frando/yerpc#7e970b55a630e715c0205324959d49913b3acc5e"
+source = "git+https://github.com/Frando/yerpc#56d0a1144bbcac76374b0b7ac4bbb71e3ceb457d"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -4030,7 +4067,7 @@ dependencies = [
 [[package]]
 name = "yerpc-tide"
 version = "0.1.0"
-source = "git+https://github.com/Frando/yerpc#7e970b55a630e715c0205324959d49913b3acc5e"
+source = "git+https://github.com/Frando/yerpc#56d0a1144bbcac76374b0b7ac4bbb71e3ceb457d"
 dependencies = [
  "anyhow",
  "async-std",
@@ -4044,10 +4081,10 @@ dependencies = [
 [[package]]
 name = "yerpc_derive"
 version = "0.1.0"
-source = "git+https://github.com/Frando/yerpc#7e970b55a630e715c0205324959d49913b3acc5e"
+source = "git+https://github.com/Frando/yerpc#56d0a1144bbcac76374b0b7ac4bbb71e3ceb457d"
 dependencies = [
  "convert_case",
- "darling 0.13.4",
+ "darling 0.14.0",
  "proc-macro2",
  "quote",
  "syn",
