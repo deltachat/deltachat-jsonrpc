@@ -34,6 +34,7 @@ pub struct FullChat {
     self_in_group: bool,
     is_muted: bool,
     ephemeral_timer: u32, //TODO look if there are more important properties in newer core versions
+    can_send: bool,
 }
 
 impl FullChat {
@@ -64,6 +65,8 @@ impl FullChat {
         let fresh_message_counter = rust_chat_id.get_fresh_msg_cnt(context).await?;
         let ephemeral_timer = rust_chat_id.get_ephemeral_timer(context).await?.to_u32();
 
+        let can_send = chat.can_send(context).await?;
+
         Ok(FullChat {
             id: chat_id,
             name: chat.name.clone(),
@@ -85,6 +88,7 @@ impl FullChat {
             self_in_group: contact_ids.contains(&ContactId::SELF),
             is_muted: chat.is_muted(),
             ephemeral_timer,
+            can_send
         })
     }
 }
