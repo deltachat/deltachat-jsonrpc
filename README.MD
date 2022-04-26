@@ -1,3 +1,5 @@
+# deltachat-jsonrpc
+
 ## Build Requirements
 
 - Linux or Mac, scrips make use of features like `>` pipes and `&&` (maybe the newer versions of powershell support them, but I didn't try that.)
