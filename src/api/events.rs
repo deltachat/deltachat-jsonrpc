@@ -54,10 +54,7 @@ pub fn event_to_json_rpc_notification(event: Event) -> Value {
         ),
         EventType::ConnectivityChanged => (Value::Null, Value::Null),
         EventType::SelfavatarChanged => (Value::Null, Value::Null),
-        EventType::WebxdcStatusUpdate {
-            msg_id,
-            status_update_id,
-        } => (json!(msg_id), json!(status_update_id)),
+        EventType::WebxdcStatusUpdate(msg_id) => (json!(msg_id), Value::Null),
     };
 
     json!({

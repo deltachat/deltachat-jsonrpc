@@ -12,29 +12,31 @@ path = "src/webserver.rs"
 required-features = ["webserver"]
 
 [dependencies]
-anyhow = "1.0.52"
-async-std = { version = "1.10.0", features = ["attributes"] }
-deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", rev = "9b562eebcd65fea91b06737a96e0eec7a576e942" }
-# deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", tag = "1.70.0" }
-num-traits = "0.2.14"
-serde = { version = "1.0.133", features = ["derive"] }
+anyhow = "1"
+async-std = { version = "1", features = ["attributes"] }
+# deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", rev = "9b562eebcd65fea91b06737a96e0eec7a576e942" }
+deltachat = { git = "https://github.com/deltachat/deltachat-core-rust", tag = "1.77.0" }
+num-traits = "0.2"
+serde = { version = "1.0", features = ["derive"] }
 tempfile = "3.3.0"
-log = "0.4.14"
-# optional, depended on features
+log = "0.4"
 async-channel = { version = "1.6.1" }
-env_logger = { version = "0.9.0", optional = true }
 futures = { version = "0.3.19" }
-tide = { version = "0.16.0", optional = true }
-tide-websockets = { version = "0.4.0", optional = true }
 serde_json = "1.0.75"
 yerpc = { git = "https://github.com/Frando/yerpc", features = ["anyhow"] }
+typescript-type-def = { git = "https://github.com/Frando/rust-typescript-type-def.git", branch = "delta", features = [
+    "json_value",
+] }
+# optional, depended on features
+env_logger = { version = "0.9.0", optional = true }
+tide = { version = "0.16.0", optional = true }
+tide-websockets = { version = "0.4.0", optional = true }
 yerpc-tide = { git = "https://github.com/Frando/yerpc", optional = true }
-typescript-type-def = { git = "https://github.com/Frando/rust-typescript-type-def.git", branch = "delta", features = ["json_value"] }
 
 
 [features]
 default = []
-webserver = ["env_logger", "tide", "tide-websockets", "yerpc-tide" ]
+webserver = ["env_logger", "tide", "tide-websockets", "yerpc-tide"]
 
 [profile.release]
 lto = true

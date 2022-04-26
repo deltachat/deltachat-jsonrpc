@@ -1,6 +1,5 @@
 use deltachat::config::Config;
-use deltachat::constants::*;
-use deltachat::contact::Contact;
+use deltachat::contact::{Contact, ContactId};
 
 use anyhow::Result;
 
@@ -33,7 +32,7 @@ impl Account {
             let addr = ctx.get_config(Config::Addr).await?;
             let profile_image = ctx.get_config(Config::Selfavatar).await?;
             let color = color_int_to_hex_string(
-                Contact::get_by_id(ctx, DC_CONTACT_ID_SELF)
+                Contact::get_by_id(ctx, ContactId::SELF)
                     .await?
                     .get_color(),
             );

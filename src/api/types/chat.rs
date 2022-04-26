@@ -1,7 +1,6 @@
 use deltachat::chat::get_chat_contacts;
 use deltachat::chat::{Chat, ChatId};
-use deltachat::constants::*;
-use deltachat::contact::Contact;
+use deltachat::contact::{Contact,ContactId};
 use deltachat::context::Context;
 
 use num_traits::cast::ToPrimitive;
@@ -78,12 +77,12 @@ impl FullChat {
             is_unpromoted: chat.is_unpromoted(),
             is_self_talk: chat.is_self_talk(),
             contacts,
-            contact_ids: contact_ids.clone(),
+            contact_ids: contact_ids.iter().map(|id|id.to_u32()).collect(),
             color,
             fresh_message_counter,
             is_contact_request: chat.is_contact_request(),
             is_device_chat: chat.is_device_talk(),
-            self_in_group: contact_ids.contains(&DC_CONTACT_ID_SELF),
+            self_in_group: contact_ids.contains(&ContactId::SELF),
             is_muted: chat.is_muted(),
             ephemeral_timer,
         })

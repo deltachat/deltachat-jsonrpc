@@ -1,14 +1,12 @@
 use anyhow::{anyhow, bail, Context, Result};
 use async_std::sync::{Arc, RwLock};
-use deltachat::message::MsgId;
 use deltachat::{
     chat::{get_chat_msgs, ChatId},
     chatlist::Chatlist,
     config::Config,
-    constants::*,
-    contact::{may_be_valid_addr, Contact},
+    contact::{may_be_valid_addr, Contact, ContactId},
     context::get_info,
-    message::Message,
+    message::{Message, MsgId, Viewtype},
     provider::get_provider_info,
 };
 use std::collections::BTreeMap;
@@ -240,7 +238,7 @@ impl CommandApi {
             &ctx,
             list_flags.unwrap_or(0) as usize,
             query_string.as_deref(),
-            query_contact_id,
+            query_contact_id.map(ContactId::new),
         )
         .await?;
         let mut l: Vec<ChatListEntry> = Vec::new();
@@ -351,6 +349,7 @@ impl CommandApi {
         contact_id: u32,
     ) -> Result<ContactObject> {
         let ctx = self.get_context(account_id).await?;
+        let contact_id = ContactId::new(contact_id);
 
         ContactObject::from_dc_contact(
             &ctx,
@@ -374,7 +373,8 @@ impl CommandApi {
                 "provided email address is not a valid email address"
             ))
         }
-        Contact::create(&ctx, &name.unwrap_or_default(), &email).await
+        let contact_id = Contact::create(&ctx, &name.unwrap_or_default(), &email).await?;
+        Ok(contact_id.to_u32())
     }
 
     /// Returns contact id of the created or existing DM chat with that contact
@@ -384,7 +384,7 @@ impl CommandApi {
         contact_id: u32,
     ) -> Result<u32> {
         let ctx = self.get_context(account_id).await?;
-        let contact = Contact::get_by_id(&ctx, contact_id).await?;
+        let contact = Contact::get_by_id(&ctx, ContactId::new(contact_id)).await?;
         ChatId::create_for_contact(&ctx, contact.id)
             .await
             .map(|id| id.to_u32())
@@ -392,12 +392,12 @@ impl CommandApi {
 
     async fn contacts_block(&self, account_id: u32, contact_id: u32) -> Result<()> {
         let ctx = self.get_context(account_id).await?;
-        Contact::block(&ctx, contact_id).await
+        Contact::block(&ctx, ContactId::new(contact_id)).await
     }
 
     async fn contacts_unblock(&self, account_id: u32, contact_id: u32) -> Result<()> {
         let ctx = self.get_context(account_id).await?;
-        Contact::unblock(&ctx, contact_id).await
+        Contact::unblock(&ctx, ContactId::new(contact_id)).await
     }
 
     async fn contacts_get_blocked(&self, account_id: u32) -> Result<Vec<ContactObject>> {
@@ -423,7 +423,8 @@ impl CommandApi {
         query: Option<String>,
     ) -> Result<Vec<u32>> {
         let ctx = self.get_context(account_id).await?;
-        Contact::get_all(&ctx, list_flags, query).await
+        let contacts = Contact::get_all(&ctx, list_flags, query).await?;
+        Ok(contacts.into_iter().map(|c| c.to_u32()).collect())
     }
 
     // formerly called getContacts2 in desktop
@@ -461,7 +462,7 @@ impl CommandApi {
                 id,
                 ContactObject::from_dc_contact(
                     &ctx,
-                    deltachat::contact::Contact::get_by_id(&ctx, id).await?,
+                    deltachat::contact::Contact::get_by_id(&ctx, ContactId::new(id)).await?,
                 )
                 .await?,
             );

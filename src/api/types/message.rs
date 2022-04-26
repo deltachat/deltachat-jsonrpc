@@ -73,7 +73,7 @@ impl MessageObject {
         Ok(MessageObject {
             id: message_id,
             chat_id: message.get_chat_id().to_u32(),
-            from_id: message.get_from_id(),
+            from_id: message.get_from_id().to_u32(),
             quoted_text: message.quoted_text(),
             quoted_message_id,
             text: message.get_text(),

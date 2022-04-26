@@ -40,7 +40,7 @@ impl ContactObject {
             auth_name: contact.get_authname().to_owned(),
             status: contact.get_status().to_owned(),
             display_name: contact.get_display_name().to_owned(),
-            id: contact.id,
+            id: contact.id.to_u32(),
             name: contact.get_name().to_owned(),
             profile_image, //BLOBS
             name_and_addr: contact.get_name_n_addr(),

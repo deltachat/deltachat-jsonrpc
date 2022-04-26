@@ -1,4 +1,5 @@
 use deltachat::constants::*;
+use deltachat::contact::ContactId;
 use deltachat::{
     chat::{get_chat_contacts, ChatVisibility},
     chatlist::Chatlist,
@@ -75,7 +76,10 @@ pub(crate) async fn _get_chat_list_items_by_id(
 
     let visibility = chat.get_visibility();
 
-    let avatar_path = chat.get_profile_image(ctx).await?.map(|path| path.to_str().unwrap_or("invalid/path").to_owned());
+    let avatar_path = chat
+        .get_profile_image(ctx)
+        .await?
+        .map(|path| path.to_str().unwrap_or("invalid/path").to_owned());
 
     let last_updated = match last_msgid {
         Some(id) => {
@@ -87,7 +91,7 @@ pub(crate) async fn _get_chat_list_items_by_id(
 
     let self_in_group = get_chat_contacts(ctx, chat_id)
         .await?
-        .contains(&DC_CONTACT_ID_SELF);
+        .contains(&ContactId::SELF);
 
     let fresh_message_counter = chat_id.get_fresh_msg_cnt(ctx).await?;
     let color = color_int_to_hex_string(chat.get_color(ctx).await?);
