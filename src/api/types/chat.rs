@@ -1,21 +1,16 @@
+use anyhow::{anyhow, Result};
 use deltachat::chat::get_chat_contacts;
 use deltachat::chat::{Chat, ChatId};
-use deltachat::constants::*;
-use deltachat::contact::Contact;
+use deltachat::contact::{Contact, ContactId};
 use deltachat::context::Context;
-
 use num_traits::cast::ToPrimitive;
-
-use anyhow::{anyhow, Result};
-use jsonrpc_core::serde_json::Value;
 use serde::Serialize;
+use typescript_type_def::TypeDef;
 
 use super::color_int_to_hex_string;
 use super::contact::ContactObject;
-use super::return_type::*;
-use ts_rs::TS;
 
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 pub struct FullChat {
     id: u32,
     name: String,
@@ -36,10 +31,7 @@ pub struct FullChat {
     self_in_group: bool,
     is_muted: bool,
     ephemeral_timer: u32, //TODO look if there are more important properties in newer core versions
-}
-
-impl ReturnType for FullChat {
-    crate::ts_rs_return_type!();
+    can_send: bool,
 }
 
 impl FullChat {
@@ -70,6 +62,8 @@ impl FullChat {
         let fresh_message_counter = rust_chat_id.get_fresh_msg_cnt(context).await?;
         let ephemeral_timer = rust_chat_id.get_ephemeral_timer(context).await?.to_u32();
 
+        let can_send = chat.can_send(context).await?;
+
         Ok(FullChat {
             id: chat_id,
             name: chat.name.clone(),
@@ -83,14 +77,15 @@ impl FullChat {
             is_unpromoted: chat.is_unpromoted(),
             is_self_talk: chat.is_self_talk(),
             contacts,
-            contact_ids: contact_ids.clone(),
+            contact_ids: contact_ids.iter().map(|id| id.to_u32()).collect(),
             color,
             fresh_message_counter,
             is_contact_request: chat.is_contact_request(),
             is_device_chat: chat.is_device_talk(),
-            self_in_group: contact_ids.contains(&DC_CONTACT_ID_SELF),
+            self_in_group: contact_ids.contains(&ContactId::SELF),
             is_muted: chat.is_muted(),
             ephemeral_timer,
+            can_send,
         })
     }
 }

@@ -1,17 +1,12 @@
-use deltachat::config::Config;
-use deltachat::constants::*;
-use deltachat::contact::Contact;
-
 use anyhow::Result;
-use jsonrpc_core::serde_json::Value;
+use deltachat::config::Config;
+use deltachat::contact::{Contact, ContactId};
+use serde::Serialize;
+use typescript_type_def::TypeDef;
 
 use super::color_int_to_hex_string;
-use super::return_type::*;
 
-use serde::Serialize;
-use ts_rs::TS;
-
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 #[serde(tag = "type")]
 pub enum Account {
     //#[serde(rename_all = "camelCase")]
@@ -28,20 +23,14 @@ pub enum Account {
     },
 }
 
-impl ReturnType for Account {
-    crate::ts_rs_return_type!();
-}
-
 impl Account {
-    pub async fn from_context(id: u32, ctx: &deltachat::context::Context) -> Result<Self> {
+    pub async fn from_context(ctx: &deltachat::context::Context, id: u32) -> Result<Self> {
         if ctx.is_configured().await? {
             let display_name = ctx.get_config(Config::Displayname).await?;
             let addr = ctx.get_config(Config::Addr).await?;
             let profile_image = ctx.get_config(Config::Selfavatar).await?;
             let color = color_int_to_hex_string(
-                Contact::get_by_id(ctx, DC_CONTACT_ID_SELF)
-                    .await?
-                    .get_color(),
+                Contact::get_by_id(ctx, ContactId::SELF).await?.get_color(),
             );
             Ok(Account::Configured {
                 id,

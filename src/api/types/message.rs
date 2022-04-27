@@ -1,18 +1,15 @@
+use anyhow::{anyhow, Result};
 use deltachat::contact::Contact;
 use deltachat::context::Context;
 use deltachat::message::Message;
 use deltachat::message::MsgId;
 use num_traits::cast::ToPrimitive;
-
-use anyhow::{anyhow, Result};
-use jsonrpc_core::serde_json::Value;
 use serde::Serialize;
-use ts_rs::TS;
+use typescript_type_def::TypeDef;
 
 use super::contact::ContactObject;
-use super::return_type::*;
 
-#[derive(Serialize, TS)]
+#[derive(Serialize, TypeDef)]
 #[serde(rename = "Message")]
 pub struct MessageObject {
     id: u32,
@@ -56,10 +53,6 @@ pub struct MessageObject {
     file_name: Option<String>,
 }
 
-impl ReturnType for MessageObject {
-    crate::ts_rs_return_type!();
-}
-
 impl MessageObject {
     pub async fn from_message_id(context: &Context, message_id: u32) -> Result<Self> {
         let msg_id = MsgId::new(message_id);
@@ -78,7 +71,7 @@ impl MessageObject {
         Ok(MessageObject {
             id: message_id,
             chat_id: message.get_chat_id().to_u32(),
-            from_id: message.get_from_id(),
+            from_id: message.get_from_id().to_u32(),
             quoted_text: message.quoted_text(),
             quoted_message_id,
             text: message.get_text(),

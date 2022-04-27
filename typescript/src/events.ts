@@ -31,7 +31,7 @@ export enum Event_TypeID {
   CONNECTIVITY_CHANGED = 2100,
 }
 
-export function get_event_name_from_id(
+export function eventIdToName(
   event_id: number
 ): keyof typeof Event_TypeID | "UNKNOWN_EVENT" {
   const name = Event_TypeID[event_id];

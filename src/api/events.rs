@@ -1,5 +1,5 @@
 use deltachat::{Event, EventType};
-use jsonrpc_core::{serde_json::json, Value};
+use serde_json::{json, Value};
 
 pub fn event_to_json_rpc_notification(event: Event) -> Value {
     let (field1, field2): (Value, Value) = match &event.typ {
@@ -54,20 +54,13 @@ pub fn event_to_json_rpc_notification(event: Event) -> Value {
         ),
         EventType::ConnectivityChanged => (Value::Null, Value::Null),
         EventType::SelfavatarChanged => (Value::Null, Value::Null),
-        EventType::WebxdcStatusUpdate {
-            msg_id,
-            status_update_id,
-        } => (json!(msg_id), json!(status_update_id)),
+        EventType::WebxdcStatusUpdate(msg_id) => (json!(msg_id), Value::Null),
     };
 
     json!({
-        "jsonrpc": "2.0",
-        "method": "event",
-        "params": {
-            "id": event.typ.as_id(),
-            "contextId": event.id,
-            "field1": field1,
-            "field2": field2
-        }
+        "id": event.typ.as_id(),
+        "contextId": event.id,
+        "field1": field1,
+        "field2": field2
     })
 }
