@@ -333,7 +333,7 @@ impl CommandApi {
 
     async fn message_get_message(&self, account_id: u32, message_id: u32) -> Result<MessageObject> {
         let ctx = self.get_context(account_id).await?;
-        MessageObject::from_message_id(message_id, &ctx).await
+        MessageObject::from_message_id(&ctx, message_id).await
     }
 
     async fn message_get_messages(
@@ -346,7 +346,7 @@ impl CommandApi {
         for message_id in message_ids {
             messages.insert(
                 message_id,
-                MessageObject::from_message_id(message_id, &ctx).await?,
+                MessageObject::from_message_id(&ctx, message_id).await?,
             );
         }
         Ok(messages)
