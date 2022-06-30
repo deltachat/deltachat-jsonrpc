@@ -1,3 +1,9 @@
+# IMPORTANT: This repo is deprecated! - deltachat-jsonrpc has moved to core repo.
+
+deltachat-jsonrpc **was moved** to the core repo in [deltachat-core-rust#3463](https://github.com/deltachat/deltachat-core-rust/pull/3463).
+
+**New location**: <https://github.com/deltachat/deltachat-core-rust/tree/master/deltachat-jsonrpc>
+
 # deltachat-jsonrpc
 
 ## Build Requirements
